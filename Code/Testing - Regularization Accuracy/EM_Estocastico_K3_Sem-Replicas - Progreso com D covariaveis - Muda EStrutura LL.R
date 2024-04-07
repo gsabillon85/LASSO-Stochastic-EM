@@ -15,14 +15,14 @@ num
 tempo_inicial<-proc.time()#Calcularemos quanto demoro todo o proceso
 
 N=500 #Tamanho da amostra Binomial
-T=600 #Cumprimento da cadeia simulada
+T=1200 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
 D=10   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 
-lambda = 100
+lambda = 0.5
 
 path = "/home/gustavo/Documentos/Programas PosMestrado/NHMM PosMestrado/K3/EM Estocastico/K3/Sem_Replicas/Output"
 Output_Number = 4
@@ -97,15 +97,8 @@ rDiscreta<-function(p){
 # }
 
 FSM1 <-function(params){#função a maximizar para achar os Betas_1
-  resp <- sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)]))) #lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6]))  #lambda*sum(abs(params[1:2*D])) 
-}
-
-FSM2 <-function(params){#função a maximizar para achar os Betas_2
-  resp <- sum(1 - log(1 + exp(Xtemp21%*%params[1:D])+ exp(Xtemp21%*%params[(D+1):(2*D)]))) + sum((Xtemp22%*%params[1:D]) - log( 1 + exp(Xtemp22%*%params[1:D])+ exp(Xtemp22%*%params[(D+1):(2*D)]) )) + sum((Xtemp23%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp23%*%params[1:D])+ exp(Xtemp23%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))#lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6])) #lambda*sum(abs(params[1:2*D])) 
-}
-
-FSM3 <-function(params){#função a maximizar para achar os Betas_3
-  resp <- sum(1 - log(1 + exp(Xtemp31%*%params[1:D])+ exp(Xtemp31%*%params[(D+1):(2*D)]))) + sum((Xtemp32%*%params[1:D]) - log( 1 + exp(Xtemp32%*%params[1:D])+ exp(Xtemp32%*%params[(D+1):(2*D)]) )) + sum((Xtemp33%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp33%*%params[1:D])+ exp(Xtemp33%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))#lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6]))  #lambda*sum(abs(params[1:2*D])) 
+  resp <- (sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) ))) + 0 + ( sum(1 - log(1 + exp(Xtemp21%*%params[(2*D+1):(2*D+D)])+ exp(Xtemp21%*%params[((2*D)+(D+1)):((2*D)+2*D)]))) + sum((Xtemp22%*%params[((2*D)+1):((2*D)+D)]) - log( 1 + exp(Xtemp22%*%params[((2*D)+1):((2*D)+D)])+ exp(Xtemp22%*%params[((2*D)+(D+1)):((2*D)+2*D)]) )) + sum((Xtemp23%*%params[((2*D)+D+1):((2*D)+2*D)]) - log( 1 + exp(Xtemp23%*%params[((2*D)+1):((2*D)+D)])+ exp(Xtemp23%*%params[((2*D)+D+1):((2*D)+2*D)]))))  + 0 +  (   sum(1 - log(1 + exp(Xtemp31%*%params[((4*D)+1):((4*D)+D)])+ exp(Xtemp31%*%params[((4*D)+D+1):((4*D)+2*D)]))) + sum((Xtemp32%*%params[((4*D)+1):((4*D)+D)]) - log( 1 + exp(Xtemp32%*%params[((4*D)+1):((4*D)+D)])+ exp(Xtemp32%*%params[((4*D)+D+1):((4*D)+2*D)]) )) + sum((Xtemp33%*%params[((4*D)+D+1):((4*D)+2*D)]) - log( 1 + exp(Xtemp33%*%params[((4*D)+1):((4*D)+D)])+ exp(Xtemp33%*%params[((4*D)+D+1):((4*D)+2*D)]) )) ) - lambda*(sum(abs(params[2:6*D])))
+  print(resp)
 }
 
 ################################
@@ -137,9 +130,7 @@ for (t in 2:T){
 #######Primeiro geramos uma sequência não observavel de treinamento######
 P_Treino=rep(1/K,K) #Vetor de probabilidade utilizadas para gerar a sequência de treino
 S_treino<-NULL # Inicializamos a sequência oculta de treinamento
-init1 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_1
-init2 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_2
-init3 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_3
+init1 = c(rnorm(D*K*(K-1)))#Valores iniciais para os Betas_1
 
 #Geramos uma sequência de treinamento
 for (i in 1:T) {
@@ -165,6 +156,7 @@ Mat_trans <-function(covar){
 
 val=1
 tolval[1]=1
+D
 #Agora executamos o Algoritmo EM Estocástico
 while ( (abs(tolval[val]))>tol ){
   #VeroSimActual=VeroSimProxima
@@ -276,10 +268,8 @@ while ( (abs(tolval[val]))>tol ){
   ##O ajuste para estimar os parâmetros de transição é
   ##feito aqui usando a função optim e os valores das
   #covariaveis filtradas
-  fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-  fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-  fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-  
+  fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+
   # Aqui atribuimos os valores estimados dos parâmetros de 
   # transição a um array que sera utilizado para recalcular 
   # a sequência S_treino na seguinte iteração do EM Est. 
@@ -303,9 +293,9 @@ while ( (abs(tolval[val]))>tol ){
       if (i == 1){
         BetaArray[i,d,2]=0
       } else if (i == 2){
-        BetaArray[i,d,2]=fit2$par[d]
+        BetaArray[i,d,2]=fit1$par[(2*D + d)]
       } else if (i == 3){
-        BetaArray[i,d,2]=fit2$par[D+d]
+        BetaArray[i,d,2]=fit1$par[((2*D) + D+d)]
       }
       
     }
@@ -316,9 +306,9 @@ while ( (abs(tolval[val]))>tol ){
       if (i == 1){
         BetaArray[i,d,3]=0
       } else if (i == 2){
-        BetaArray[i,d,3]=fit3$par[d]
+        BetaArray[i,d,3]=fit1$par[(4*D + d)]
       } else if (i == 3){
-        BetaArray[i,d,3]=fit3$par[D+d]
+        BetaArray[i,d,3]=fit1$par[(4*D + D+d)]
       }
       
     }
@@ -488,9 +478,7 @@ while ( abs(tolval[val])>tol ) {
   }
   
   fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-  fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-  fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-  
+ 
   for (i in 1:K){
     for (d in 1:D){
       if (i == 1){
@@ -509,9 +497,9 @@ while ( abs(tolval[val])>tol ) {
       if (i == 1){
         BetaArray[i,d,2]=0
       } else if (i == 2){
-        BetaArray[i,d,2]=fit2$par[d]
+        BetaArray[i,d,2]=fit1$par[(2*D + d)]
       } else if (i == 3){
-        BetaArray[i,d,2]=fit2$par[D+d]
+        BetaArray[i,d,2]=fit1$par[((2*D) + D+d)]
       }
       
     }
@@ -522,9 +510,9 @@ while ( abs(tolval[val])>tol ) {
       if (i == 1){
         BetaArray[i,d,3]=0
       } else if (i == 2){
-        BetaArray[i,d,3]=fit3$par[d]
+        BetaArray[i,d,3]=fit1$par[(4*D + d)]
       } else if (i == 3){
-        BetaArray[i,d,3]=fit3$par[D+d]
+        BetaArray[i,d,3]=fit1$par[(4*D + D+d)]
       }
       
     }
@@ -624,9 +612,9 @@ for (i in 1:K){
     if (i == 1){
       Beta_Post_Array[i,d,2]=0
     } else if (i == 2){
-      Beta_Post_Array[i,d,2]=fit2$par[d]
+      Beta_Post_Array[i,d,2]=fit1$par[(2*D + d)]
     } else if (i == 3){
-      Beta_Post_Array[i,d,2]=fit2$par[D+d]
+      Beta_Post_Array[i,d,2]=fit1$par[((2*D) + D+d)]
     }
     
   }
@@ -637,36 +625,14 @@ for (i in 1:K){
     if (i == 1){
       Beta_Post_Array[i,d,3]=0
     } else if (i == 2){
-      Beta_Post_Array[i,d,3]=fit3$par[d]
+      Beta_Post_Array[i,d,3]=fit1$par[(4*D + d)]
     } else if (i == 3){
-      Beta_Post_Array[i,d,3]=fit3$par[D+d]
+      Beta_Post_Array[i,d,3]=fit1$par[(4*D + D+d)]
     }
     
   }
 }
 
-
-#Almaceno os valores finais das estimativas
-# Beta_Post_Array[2,1,1]= fit1$par[1]
-# Beta_Post_Array[2,2,1]= fit1$par[2]
-# Beta_Post_Array[2,3,1]= fit1$par[3]
-# Beta_Post_Array[3,1,1]= fit1$par[4]
-# Beta_Post_Array[3,2,1]= fit1$par[5]
-# Beta_Post_Array[3,3,1]= fit1$par[6]
-# 
-# Beta_Post_Array[2,1,2]= fit2$par[1]
-# Beta_Post_Array[2,2,2]= fit2$par[2]
-# Beta_Post_Array[2,3,2]= fit2$par[3]
-# Beta_Post_Array[3,1,2]= fit2$par[4]
-# Beta_Post_Array[3,2,2]= fit2$par[5]
-# Beta_Post_Array[3,3,2]= fit2$par[6]
-# 
-# Beta_Post_Array[2,1,3]= fit3$par[1]
-# Beta_Post_Array[2,2,3]= fit3$par[2]
-# Beta_Post_Array[2,3,3]= fit3$par[3]
-# Beta_Post_Array[3,1,3]= fit3$par[4]
-# Beta_Post_Array[3,2,3]= fit3$par[5]
-# Beta_Post_Array[3,3,3]= fit3$par[6]
 
 Thetas_Finais<-theta_hat
 
@@ -735,10 +701,20 @@ for (i in 1:(D*K*(K-1))){
   }
 }
 
-sum(TP, na.rm = TRUE)
-sum(TN, na.rm = TRUE)
-sum(FP, na.rm = TRUE)
-sum(FN, na.rm = TRUE)
+Precision <- NULL
+Sensitivity <- NULL
+Specificity <- NULL
+Accuracy <- NULL
+
+Precision = sum(TP, na.rm = TRUE) / ( sum(TP, na.rm = TRUE) +  sum(FP, na.rm = TRUE) )  
+Sensitivity = sum(TP, na.rm = TRUE) / ( sum(TP, na.rm = TRUE) +  sum(FN, na.rm = TRUE) )
+Specificity = sum(TN, na.rm = TRUE) / ( sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) )
+Accuracy = (sum(TN, na.rm = TRUE) + sum(TP, na.rm = TRUE)) / ( sum(TP, na.rm = TRUE) + sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) + sum(FN, na.rm = TRUE))
+
+Precision
+Specificity
+Sensitivity
+Accuracy
   
 
 df1<-data.frame(Real, Estimado)
