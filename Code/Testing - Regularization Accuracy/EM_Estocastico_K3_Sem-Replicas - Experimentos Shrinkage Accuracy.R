@@ -4,9 +4,9 @@ library('label.switching')
 library(e1071)
 zero_threshold = 0.05
 N=500 #Tamanho da amostra Binomial
-T=300 #Cumprimento da cadeia simulada
+T=1250 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
-D=40   #Quantidade de Covariaveis
+D=25   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
@@ -14,9 +14,9 @@ tolval[1]=1
 optim_algo = "Nelder-Mead"
 
 # Generate 20 random seeds to generate 20 random samples
-set.seed(5)
+set.seed(10)
 seeds <-sample(110000000,30) # Seed number para conseguer os mesmos valores simulados
-lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75, 100, 200, 250, 300, 500)
+lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75, 100, 200)
 #lambdas = lambdas_large
 
 avg_Sensitivity = NULL
@@ -29,8 +29,17 @@ avg_pctgm_zerado= NULL
 sd_pctgm_zerado = NULL
 avg_RMSE = NULL
 sd_RMSE = NULL
+avg_Parameters = matrix(nrow = length(lambdas), ncol = D*K*(K-1) )
+
+mainDir = "/home/gustavo/Projects/LASSO-NHMM/Code/Testing - Regularization Accuracy/Shrinkage Accuracy - Results"
+subDir = paste("Resultados_T",toString(T),"_D",toString(D),"_zero-threshold",toString(zero_threshold),"optimethod",toString(optim_algo))
+dir.create(file.path(mainDir, subDir), showWarnings = FALSE)
+setwd(file.path(mainDir, subDir))
+
+
 tempo_inicial<-proc.time()
 for (p in 1:length(lambdas)){
+  Parameters <- matrix(nrow = length(seeds), ncol = D*K*(K-1) )
   pctgm_zerado <- NULL
   Precision <- NULL
   Sensitivity <- NULL
@@ -673,28 +682,7 @@ for (p in 1:length(lambdas)){
     }
     
     
-    #Almaceno os valores finais das estimativas
-    # Beta_Post_Array[2,1,1]= fit1$par[1]
-    # Beta_Post_Array[2,2,1]= fit1$par[2]
-    # Beta_Post_Array[2,3,1]= fit1$par[3]
-    # Beta_Post_Array[3,1,1]= fit1$par[4]
-    # Beta_Post_Array[3,2,1]= fit1$par[5]
-    # Beta_Post_Array[3,3,1]= fit1$par[6]
-    # 
-    # Beta_Post_Array[2,1,2]= fit2$par[1]
-    # Beta_Post_Array[2,2,2]= fit2$par[2]
-    # Beta_Post_Array[2,3,2]= fit2$par[3]
-    # Beta_Post_Array[3,1,2]= fit2$par[4]
-    # Beta_Post_Array[3,2,2]= fit2$par[5]
-    # Beta_Post_Array[3,3,2]= fit2$par[6]
-    # 
-    # Beta_Post_Array[2,1,3]= fit3$par[1]
-    # Beta_Post_Array[2,2,3]= fit3$par[2]
-    # Beta_Post_Array[2,3,3]= fit3$par[3]
-    # Beta_Post_Array[3,1,3]= fit3$par[4]
-    # Beta_Post_Array[3,2,3]= fit3$par[5]
-    # Beta_Post_Array[3,3,3]= fit3$par[6]
-    
+
     Thetas_Finais<-theta_hat
     
     
@@ -759,10 +747,10 @@ for (p in 1:length(lambdas)){
       }
     }
     
-    sum(TP, na.rm = TRUE)
-    sum(TN, na.rm = TRUE)
-    sum(FP, na.rm = TRUE)
-    sum(FN, na.rm = TRUE)
+    for (w in 1:length(Estimado)){
+      Parameters[h,w] = Estimado[w]
+    }
+    
     pctgm_zerado[h] = sum(abs(Estimado<=zero_threshold))/(D*K*(K-1))
     Precision[h] = sum(TP, na.rm = TRUE) / ( sum(TP, na.rm = TRUE) +  sum(FP, na.rm = TRUE) )  
     Sensitivity[h] = sum(TP, na.rm = TRUE) / ( sum(TP, na.rm = TRUE) +  sum(FN, na.rm = TRUE) )
@@ -780,12 +768,17 @@ for (p in 1:length(lambdas)){
   sd_Accuracy[p] = sd(Accuracy)
   avg_pctgm_zerado[p] = mean(pctgm_zerado)
   sd_pctgm_zerado[p] = sd(pctgm_zerado)
+  for (o in 1:(D*K*(K-1))){
+    avg_Parameters[p,o] <- mean(Parameters[,o])
+  }
+    
+
 }
   
 
 df_avgs<-data.frame(cbind(lambdas, avg_Sensitivity, avg_Specificity, avg_Accuracy, avg_pctgm_zerado, avg_RMSE))
 df_sd <- data.frame(cbind(lambdas, sd_Sensitivity, sd_Specificity, sd_Accuracy, sd_pctgm_zerado, sd_RMSE))
-df_full <- data.frame(cbind(avg_Sensitivity, sd_Sensitivity, avg_Specificity, sd_Specificity, avg_Accuracy, sd_Accuracy, avg_pctgm_zerado, sd_pctgm_zerado, avg_RMSE, sd_RMSE))
+df_full <- data.frame(cbind(lambdas, avg_Sensitivity, sd_Sensitivity, avg_Specificity, sd_Specificity, avg_Accuracy, sd_Accuracy, avg_pctgm_zerado, sd_pctgm_zerado, avg_RMSE, sd_RMSE))
 
 
 tempo_final<-proc.time()
@@ -795,7 +788,9 @@ df_full
 
 
 
+
 ######################################
+#Sensitividade
 sample.n <- 30 
 lower.bound = NULL
 upper.bound = NULL
@@ -813,13 +808,17 @@ for (z in 1:length(lambdas)){
   upper.bound[z] <- sample.mean + margin.error
 }
 
-graph_df <- data.frame(x =lambdas,
+graph_df <- data.frame(x =1:length(lambdas),
                        F = df_avgs$avg_Sensitivity*100,
                        L =lower.bound*100,
                        U =upper.bound*100)
 
 
-plot(graph_df$x, graph_df$F, ylim = c(0,100), xlim = c(0,50), type = "l")
+jpeg(paste("Sensitivity_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".jpg", sep = ""), width = 1400, height = 700)
+
+plot(graph_df$x, xaxt="n", graph_df$F, ylim = c(0,100),  type = "l", xlab = "Valor de Lambda", ylab = "Porcentagem")
+axis(1, at=1:22, labels=lambdas, cex.axis=0.75)
+title(paste("Sensitivity T=",toString(T)," D=",toString(D)," zero-threshold=",toString(zero_threshold)," optim-method=",toString(optim_algo),".jpg", sep = ""))
 #make polygon where coordinates start with lower limit and 
 # then upper limit in reverse order
 polygon(c(graph_df$x,rev(graph_df$x)),c(graph_df$L,rev(graph_df$U)),col = "grey75", border = FALSE)
@@ -827,9 +826,178 @@ lines(graph_df$x, graph_df$F, lwd = 1)
 #add red lines on borders of polygon
 lines(graph_df$x, graph_df$U, col="red",lty=2)
 lines(graph_df$x, graph_df$L, col="red",lty=2) 
+dev.off() 
 
 
+#Specificidade
+lower.bound = NULL
+upper.bound = NULL
+for (z in 1:length(lambdas)){
+  sample.mean <- df_avgs$avg_Specificity[z]
+  sample.se <- df_sd$sd_Specificity[z]
+  
+  alpha = 0.05
+  degrees.freedom = sample.n - 1
+  t.score = qt(p=alpha/2, df=degrees.freedom,lower.tail=F)
+  
+  margin.error <- t.score * sample.se
+  print(margin.error)
+  lower.bound[z] <- sample.mean - margin.error
+  upper.bound[z] <- sample.mean + margin.error
+}
+
+graph_df <- data.frame(x =1:length(lambdas),
+                       F = df_avgs$avg_Specificity*100,
+                       L =lower.bound*100,
+                       U =upper.bound*100)
 
 
-write.csv(df_full, paste("Resultados_T",toString(T),"_D",toString(D),"_zero-threshold",toString(zero_threshold),"optimethod",toString(optim_algo),".csv"), row.names=FALSE)
+jpeg(paste("Specificity_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".jpg", sep = ""), width = 1400, height = 700)
+
+plot(graph_df$x, xaxt="n", graph_df$F, ylim = c(0,100),  type = "l", xlab = "Valor de Lambda", ylab = "Porcentagem")
+axis(1, at=1:22, labels=lambdas, cex.axis=0.75)
+title(paste("Specificity T=",toString(T)," D=",toString(D)," zero-threshold=",toString(zero_threshold)," optim-method=",toString(optim_algo),".jpg", sep = ""))
+#make polygon where coordinates start with lower limit and 
+# then upper limit in reverse order
+polygon(c(graph_df$x,rev(graph_df$x)),c(graph_df$L,rev(graph_df$U)),col = "grey75", border = FALSE)
+lines(graph_df$x, graph_df$F, lwd = 1)
+#add red lines on borders of polygon
+lines(graph_df$x, graph_df$U, col="red",lty=2)
+lines(graph_df$x, graph_df$L, col="red",lty=2) 
+dev.off() 
+
+
+#Acuracia
+lower.bound = NULL
+upper.bound = NULL
+for (z in 1:length(lambdas)){
+  sample.mean <- df_avgs$avg_Accuracy[z]
+  sample.se <- df_sd$sd_Accuracy[z]
+  
+  alpha = 0.05
+  degrees.freedom = sample.n - 1
+  t.score = qt(p=alpha/2, df=degrees.freedom,lower.tail=F)
+  
+  margin.error <- t.score * sample.se
+  print(margin.error)
+  lower.bound[z] <- sample.mean - margin.error
+  upper.bound[z] <- sample.mean + margin.error
+}
+
+graph_df <- data.frame(x =1:length(lambdas),
+                       F = df_avgs$avg_Accuracy*100,
+                       L =lower.bound*100,
+                       U =upper.bound*100)
+
+
+jpeg(paste("Accuracy_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".jpg", sep = ""), width = 1400, height = 700)
+
+plot(graph_df$x, xaxt="n", graph_df$F, ylim = c(0,100),  type = "l", xlab = "Valor de Lambda", ylab = "Porcentagem")
+axis(1, at=1:22, labels=lambdas, cex.axis=0.75)
+title(paste("Accuracy T=",toString(T)," D=",toString(D)," zero-threshold=",toString(zero_threshold)," optim-method=",toString(optim_algo),".jpg", sep = ""))
+#make polygon where coordinates start with lower limit and 
+# then upper limit in reverse order
+polygon(c(graph_df$x,rev(graph_df$x)),c(graph_df$L,rev(graph_df$U)),col = "grey75", border = FALSE)
+lines(graph_df$x, graph_df$F, lwd = 1)
+#add red lines on borders of polygon
+lines(graph_df$x, graph_df$U, col="red",lty=2)
+lines(graph_df$x, graph_df$L, col="red",lty=2) 
+dev.off() 
+
+
+#Taxa de Zerado
+lower.bound = NULL
+upper.bound = NULL
+for (z in 1:length(lambdas)){
+  sample.mean <- df_avgs$avg_pctgm_zerado[z]
+  sample.se <- df_sd$sd_pctgm_zerado[z]
+  
+  alpha = 0.05
+  degrees.freedom = sample.n - 1
+  t.score = qt(p=alpha/2, df=degrees.freedom,lower.tail=F)
+  
+  margin.error <- t.score * sample.se
+  print(margin.error)
+  lower.bound[z] <- sample.mean - margin.error
+  upper.bound[z] <- sample.mean + margin.error
+}
+
+graph_df <- data.frame(x =1:length(lambdas),
+                       F = df_avgs$avg_pctgm_zerado*100,
+                       L =lower.bound*100,
+                       U =upper.bound*100)
+
+
+jpeg(paste("PctgmZerado_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".jpg", sep = ""), width = 1400, height = 700)
+
+plot(graph_df$x, xaxt="n", graph_df$F, ylim = c(0,100),  type = "l", xlab = "Valor de Lambda", ylab = "Porcentagem")
+axis(1, at=1:22, labels=lambdas, cex.axis=0.75)
+title(paste("PctgmZerado T=",toString(T)," D=",toString(D)," zero-threshold=",toString(zero_threshold)," optim-method=",toString(optim_algo),".jpg", sep = ""))
+#make polygon where coordinates start with lower limit and 
+# then upper limit in reverse order
+polygon(c(graph_df$x,rev(graph_df$x)),c(graph_df$L,rev(graph_df$U)),col = "grey75", border = FALSE)
+lines(graph_df$x, graph_df$F, lwd = 1)
+#add red lines on borders of polygon
+lines(graph_df$x, graph_df$U, col="red",lty=2)
+lines(graph_df$x, graph_df$L, col="red",lty=2) 
+dev.off() 
+
+
+#RMSE
+lower.bound = NULL
+upper.bound = NULL
+for (z in 1:length(lambdas)){
+  sample.mean <- df_avgs$avg_RMSE[z]
+  sample.se <- df_sd$sd_RMSE[z]
+  
+  alpha = 0.05
+  degrees.freedom = sample.n - 1
+  t.score = qt(p=alpha/2, df=degrees.freedom,lower.tail=F)
+  
+  margin.error <- t.score * sample.se
+  print(margin.error)
+  lower.bound[z] <- sample.mean - margin.error
+  upper.bound[z] <- sample.mean + margin.error
+}
+
+graph_df <- data.frame(x =1:length(lambdas),
+                       F = df_avgs$avg_RMSE,
+                       L =lower.bound,
+                       U =upper.bound)
+
+
+jpeg(paste("RMSE_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".jpg", sep = ""), width = 1400, height = 700)
+
+plot(graph_df$x, xaxt="n", graph_df$F,  type = "l", xlab = "Valor de Lambda", ylab = "RMSE")
+axis(1, at=1:22, labels=lambdas, cex.axis=0.75)
+title(paste("RMSE T=",toString(T)," D=",toString(D)," zero-threshold=",toString(zero_threshold)," optim-method=",toString(optim_algo),".jpg", sep = ""))
+#make polygon where coordinates start with lower limit and 
+# then upper limit in reverse order
+polygon(c(graph_df$x,rev(graph_df$x)),c(graph_df$L,rev(graph_df$U)),col = "grey75", border = FALSE)
+lines(graph_df$x, graph_df$F, lwd = 1)
+#add red lines on borders of polygon
+lines(graph_df$x, graph_df$U, col="red",lty=2)
+lines(graph_df$x, graph_df$L, col="red",lty=2) 
+dev.off() 
+
+
+df_params <- data.frame(avg_Parameters)
+write.csv(df_full, paste("ResultsData_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
+write.csv(df_params, paste("ParameterEstimates_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
+
+
+# Create an empty plot
+jpeg(paste("Coeficientes_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".jpg", sep = ""), width = 1400, height = 1000)
+plot(lambdas, xaxt="n", avg_Parameters[,1],  type = "l", xlim = c(0, 25), ylim = c(-3, 3), 
+     xlab = "Lambda", ylab = "Valor do Coeficiente", main = "Coeficientes de Transição")
+axis(1, at=1:22, labels=lambdas, cex.axis=0.75)
+for (v in 1:(D*K*(K-1))){
+  if (Real[v] == 0)
+  color = "red"
+  else {
+    color = "blue"
+  }
+  lines(lambdas, avg_Parameters[,v], type = "l", col = color)
+}
+dev.off() 
 
