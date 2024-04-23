@@ -4,18 +4,19 @@ library('label.switching')
 library(e1071)
 zero_threshold = 0.05
 N=500 #Tamanho da amostra Binomial
-T=650 #Cumprimento da cadeia simulada
-K=3   #Numero de estados ocultos
-D=6   #Quantidade de Covariaveis
+T=300 #Cumprimento da cadeia simulada
+K=2   #Numero de estados ocultos
+D=5   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 
 optim_algo = "BFGS"
 
-# Generate 20 random seeds to generate 20 random samples
+# Generate 30 random seeds to generate 20 random samples
+n_datasets = 30
 set.seed(10)
-seeds <-sample(110000000,30) # Seed number para conseguer os mesmos valores simulados
+seeds <-sample(110000000,n_datasets) # Seed number para conseguer os mesmos valores simulados
 lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75, 100, 200)
 #lambdas = lambdas_large
 
@@ -64,7 +65,7 @@ for (p in 1:length(lambdas)){
     ####### Simulação #######
     TransCount <- matrix(data = c(rep(0,K^2)), nrow = K, ncol = K)
     P0=rep(1/K,K) #Inicializamos vetor de probabilidades inciais para o HMM
-    theta=c(0.25,0.5,0.75) # vetor com a probabilidade de sucesso das 2 distribuiçoes Binomiais
+    theta=c(0.25,0.75) # vetor com a probabilidade de sucesso das 2 distribuiçoes Binomiais
     Nt=rep(N,T) # número de ensaios de Bernoulli associado a dada uma das T variáveis Binomiais. Cada coloquei tudo igual mas eles podem diferentes.
     theta_hat = NULL #Variavel para estimar os thetas em cada iteração do EM Estocastico
     BetaArray = array(0, dim=c(K,D,K))
@@ -81,9 +82,6 @@ for (p in 1:length(lambdas)){
     Betas[2,1,1]=0
     Betas[2,2,1]=-1.9
     Betas[2,3,1]=0
-    Betas[3,1,1]=-2.3
-    Betas[3,2,1]=0
-    Betas[3,3,1]=0
     
     Betas[1,1,2]=0
     Betas[1,2,2]=0
@@ -91,19 +89,6 @@ for (p in 1:length(lambdas)){
     Betas[2,1,2]=2.4
     Betas[2,2,2]=0
     Betas[2,3,2]=-1.5
-    Betas[3,1,2]=0
-    Betas[3,2,2]=0
-    Betas[3,3,2]=2.2
-    
-    Betas[1,1,3]=0
-    Betas[1,2,3]=0
-    Betas[1,3,3]=0
-    Betas[2,1,3]=0
-    Betas[2,2,3]=0
-    Betas[2,3,3]=-1.3
-    Betas[3,1,3]=0
-    Betas[3,2,3]=-2.3
-    Betas[3,3,3]=1.7
     
     #####Função para gerar valores uniformes discretos
     rDiscreta<-function(p){
@@ -123,15 +108,11 @@ for (p in 1:length(lambdas)){
     # }
     
     FSM1 <-function(params){#função a maximizar para achar os Betas_1
-      resp <- sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)]))) #lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6]))  #lambda*sum(abs(params[1:2*D])) 
+      resp <- (sum(1 - log(1 + exp(Xtemp11%*%params))) + sum(Xtemp12%*%params - log(1 + exp(Xtemp12%*%params)))) - lambda*sum(abs(params[2:D])) 
     }
     
     FSM2 <-function(params){#função a maximizar para achar os Betas_2
-      resp <- sum(1 - log(1 + exp(Xtemp21%*%params[1:D])+ exp(Xtemp21%*%params[(D+1):(2*D)]))) + sum((Xtemp22%*%params[1:D]) - log( 1 + exp(Xtemp22%*%params[1:D])+ exp(Xtemp22%*%params[(D+1):(2*D)]) )) + sum((Xtemp23%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp23%*%params[1:D])+ exp(Xtemp23%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))#lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6])) #lambda*sum(abs(params[1:2*D])) 
-    }
-    
-    FSM3 <-function(params){#função a maximizar para achar os Betas_3
-      resp <- sum(1 - log(1 + exp(Xtemp31%*%params[1:D])+ exp(Xtemp31%*%params[(D+1):(2*D)]))) + sum((Xtemp32%*%params[1:D]) - log( 1 + exp(Xtemp32%*%params[1:D])+ exp(Xtemp32%*%params[(D+1):(2*D)]) )) + sum((Xtemp33%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp33%*%params[1:D])+ exp(Xtemp33%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))#lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6]))  #lambda*sum(abs(params[1:2*D])) 
+      resp <- (sum(1 - log(1 + exp(Xtemp21%*%params))) + sum(Xtemp22%*%params - log(1 + exp(Xtemp22%*%params))))  - lambda*sum(abs(params[2:D]))
     }
     
     ################################
@@ -165,8 +146,7 @@ for (p in 1:length(lambdas)){
     S_treino<-NULL # Inicializamos a sequência oculta de treinamento
     init1 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_1
     init2 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_2
-    init3 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_3
-    
+
     #Geramos uma sequência de treinamento
     for (i in 1:T) {
       S_treino[i] = rDiscreta(P_Treino)
@@ -214,7 +194,7 @@ for (p in 1:length(lambdas)){
       temp=NULL
       for (i in 2:T) {#Calculo do terceiro segmento da LL
         for (g in 1:K) {
-          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[t-1]],ncol=1))
+          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[i-1]],ncol=1))
         }
         acVS3 = acVS3 + (X[i,]%*%matrix(BetaArray[S_treino[i],,S_treino[i-1]]) - log(sum(temp), base = exp(1)))
       }
@@ -240,7 +220,7 @@ for (p in 1:length(lambdas)){
       #Este segmento de codigo testa se aconteceram todas as transições possiveis
       #No caso que elas não tinham acontecido, as que
       #não aconteceram são forçadas a acontecer
-      TransCount <- matrix(data = c(0,0,0,0,0,0,0,0,0), nrow = K, ncol = K)
+      TransCount <- matrix(data = c(rep(0, K*K)), nrow = K, ncol = K)
       for (i in 2:T) {
         for (j in 1:K) {
           for (k in 1:K) {
@@ -265,13 +245,10 @@ for (p in 1:length(lambdas)){
       #### Aqui inicia a filtragem dos dados para cada iteração
       Xtemp11<-NULL
       Xtemp12<-NULL
-      Xtemp13<-NULL
       Xtemp21<-NULL
       Xtemp22<-NULL
-      Xtemp23<-NULL
-      Xtemp31<-NULL
-      Xtemp32<-NULL
-      Xtemp33<-NULL
+  
+     
       
       for (t in 2:T) {
         #filtros indo para o Estado # 1
@@ -281,8 +258,6 @@ for (p in 1:length(lambdas)){
         if(S_treino[t]%in%1 && S_treino[t-1]%in%2)
           Xtemp21<-rbind(Xtemp21, X[t,])
         
-        if(S_treino[t]%in%1 && S_treino[t-1]%in%3)
-          Xtemp31<-rbind(Xtemp31, X[t,])
         
         #Filtros indo para o Estado # 2
         if(S_treino[t]%in%2 && S_treino[t-1]%in%1)
@@ -290,19 +265,6 @@ for (p in 1:length(lambdas)){
         
         if(S_treino[t]%in%2 && S_treino[t-1]%in%2)
           Xtemp22<-rbind(Xtemp22, X[t,])
-        
-        if(S_treino[t]%in%2 && S_treino[t-1]%in%3)
-          Xtemp32<-rbind(Xtemp32, X[t,])
-        
-        #Filtros indo para o Estado # 3
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%1)
-          Xtemp13<-rbind(Xtemp13, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%2)
-          Xtemp23<-rbind(Xtemp23, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%3)
-          Xtemp33<-rbind(Xtemp33, X[t,])
       }
       
       
@@ -311,8 +273,7 @@ for (p in 1:length(lambdas)){
       #covariaveis filtradas
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      
+          
       # Aqui atribuimos os valores estimados dos parâmetros de 
       # transição a um array que sera utilizado para recalcular 
       # a sequência S_treino na seguinte iteração do EM Est. 
@@ -344,51 +305,7 @@ for (p in 1:length(lambdas)){
         }
       }
       
-      for (i in 1:K){
-        for (d in 1:D){
-          if (i == 1){
-            BetaArray[i,d,3]=0
-          } else if (i == 2){
-            BetaArray[i,d,3]=fit3$par[d]
-          } else if (i == 3){
-            BetaArray[i,d,3]=fit3$par[D+d]
-          }
-          
-        }
-      }
       
-      
-      # BetaArray[1,1,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[2,1,1]=fit1$par[1]
-      # BetaArray[2,2,1]=fit1$par[2]
-      # BetaArray[2,3,1]=fit1$par[3]
-      # BetaArray[3,1,1]=fit1$par[4]
-      # BetaArray[3,2,1]=fit1$par[5]
-      # BetaArray[3,3,1]=fit1$par[6]
-      # 
-      # BetaArray[1,1,2]=0
-      # BetaArray[1,2,2]=0
-      # BetaArray[1,3,2]=0
-      # BetaArray[2,1,2]=fit2$par[1]
-      # BetaArray[2,2,2]=fit2$par[2]
-      # BetaArray[2,3,2]=fit2$par[3]
-      # BetaArray[3,1,2]=fit2$par[4]
-      # BetaArray[3,2,2]=fit2$par[5]
-      # BetaArray[3,3,2]=fit2$par[6]
-      # 
-      # Betas
-      # 
-      # BetaArray[1,1,3]=0
-      # BetaArray[1,2,3]=0
-      # BetaArray[1,3,3]=0
-      # BetaArray[2,1,3]=fit3$par[1]
-      # BetaArray[2,2,3]=fit3$par[2]
-      # BetaArray[2,3,3]=fit3$par[3]
-      # BetaArray[3,1,3]=fit3$par[4]
-      # BetaArray[3,2,3]=fit3$par[5]
-      # BetaArray[3,3,3]=fit3$par[6]
       
       ac2VS1=0
       ac2VS2=0
@@ -404,7 +321,7 @@ for (p in 1:length(lambdas)){
       temp=NULL
       for (i in 2:T) {#Calculo do terceiro segmento da LL
         for (g in 1:K) {
-          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[t-1]],ncol=1))
+          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[i-1]],ncol=1))
         }
         ac2VS3 = ac2VS3 + (X[i,]%*%matrix(BetaArray[S_treino[i],,S_treino[i-1]]) - log(sum(temp), base = exp(1)))
       }
@@ -474,7 +391,7 @@ for (p in 1:length(lambdas)){
       temp=NULL
       for (i in 2:T) {#Calculo do terceiro segmento da LL
         for (g in 1:K) {
-          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[t-1]],ncol=1))
+          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[i-1]],ncol=1))
         }
         acVS3 = acVS3 + (X[i,]%*%matrix(BetaArray[S_treino[i],,S_treino[i-1]]) - log(sum(temp), base = exp(1)))
       }
@@ -483,13 +400,8 @@ for (p in 1:length(lambdas)){
       #filtragem dos dados
       Xtemp11<-NULL
       Xtemp12<-NULL
-      Xtemp13<-NULL
       Xtemp21<-NULL
       Xtemp22<-NULL
-      Xtemp23<-NULL
-      Xtemp31<-NULL
-      Xtemp32<-NULL
-      Xtemp33<-NULL
       
       for (t in 2:T) {
         #filtros indo para o Estado # 1
@@ -499,34 +411,17 @@ for (p in 1:length(lambdas)){
         if(S_treino[t]%in%1 && S_treino[t-1]%in%2)
           Xtemp21<-rbind(Xtemp21, X[t,])
         
-        if(S_treino[t]%in%1 && S_treino[t-1]%in%3)
-          Xtemp31<-rbind(Xtemp31, X[t,])
-        
         #Filtros indo para o Estado # 2
         if(S_treino[t]%in%2 && S_treino[t-1]%in%1)
           Xtemp12<-rbind(Xtemp12, X[t,])
         
         if(S_treino[t]%in%2 && S_treino[t-1]%in%2)
           Xtemp22<-rbind(Xtemp22, X[t,])
-        
-        if(S_treino[t]%in%2 && S_treino[t-1]%in%3)
-          Xtemp32<-rbind(Xtemp32, X[t,])
-        
-        #Filtros indo para o Estado # 3
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%1)
-          Xtemp13<-rbind(Xtemp13, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%2)
-          Xtemp23<-rbind(Xtemp23, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%3)
-          Xtemp33<-rbind(Xtemp33, X[t,])
       }
       
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      
+ 
       for (i in 1:K){
         for (d in 1:D){
           if (i == 1){
@@ -553,50 +448,6 @@ for (p in 1:length(lambdas)){
         }
       }
       
-      for (i in 1:K){
-        for (d in 1:D){
-          if (i == 1){
-            BetaArray[i,d,3]=0
-          } else if (i == 2){
-            BetaArray[i,d,3]=fit3$par[d]
-          } else if (i == 3){
-            BetaArray[i,d,3]=fit3$par[D+d]
-          }
-          
-        }
-      }
-      
-      
-      # BetaArray[1,1,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[2,1,1]=fit1$par[1]
-      # BetaArray[2,2,1]=fit1$par[2]
-      # BetaArray[2,3,1]=fit1$par[3]
-      # BetaArray[3,1,1]=fit1$par[4]
-      # BetaArray[3,2,1]=fit1$par[5]
-      # BetaArray[3,3,1]=fit1$par[6]
-      # 
-      # BetaArray[1,1,2]=0
-      # BetaArray[1,2,2]=0
-      # BetaArray[1,3,2]=0
-      # BetaArray[2,1,2]=fit2$par[1]
-      # BetaArray[2,2,2]=fit2$par[2]
-      # BetaArray[2,3,2]=fit2$par[3]
-      # BetaArray[3,1,2]=fit2$par[4]
-      # BetaArray[3,2,2]=fit2$par[5]
-      # BetaArray[3,3,2]=fit2$par[6]
-      # 
-      # BetaArray[1,1,3]=0
-      # BetaArray[1,2,3]=0
-      # BetaArray[1,3,3]=0
-      # BetaArray[2,1,3]=fit3$par[1]
-      # BetaArray[2,2,3]=fit3$par[2]
-      # BetaArray[2,3,3]=fit3$par[3]
-      # BetaArray[3,1,3]=fit3$par[4]
-      # BetaArray[3,2,3]=fit3$par[5]
-      # BetaArray[3,3,3]=fit3$par[6] 
-      
       ac2VS1=0
       ac2VS2=0
       ac2VS3=0
@@ -611,7 +462,7 @@ for (p in 1:length(lambdas)){
       temp=NULL
       for (i in 2:T) {#Calculo do terceiro segmento da LL
         for (g in 1:K) {
-          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[t-1]],ncol=1))
+          temp[g]<-exp(X[i,]%*%matrix(BetaArray[g,,S_treino[i-1]],ncol=1))
         }
         ac2VS3 = ac2VS3 + (X[i,]%*%matrix(BetaArray[S_treino[i],,S_treino[i-1]]) - log(sum(temp), base = exp(1)))
       }
@@ -667,26 +518,9 @@ for (p in 1:length(lambdas)){
         
       }
     }
-    
-    for (i in 1:K){
-      for (d in 1:D){
-        if (i == 1){
-          Beta_Post_Array[i,d,3]=0
-        } else if (i == 2){
-          Beta_Post_Array[i,d,3]=fit3$par[d]
-        } else if (i == 3){
-          Beta_Post_Array[i,d,3]=fit3$par[D+d]
-        }
-        
-      }
-    }
-    
-    
 
     Thetas_Finais<-theta_hat
-    
-    
-    
+ 
     #Calculo do AICc e BIC
     
     acumLL1=0 #usaremos para calcular 1era parte da LL
@@ -705,7 +539,7 @@ for (p in 1:length(lambdas)){
     temp=NULL
     for (i in 2:T) {#Calculo do terceiro segmento da LL
       for (g in 1:K) {
-        temp[g]<-exp(X[i,]%*%matrix(Beta_Post_Array[g,,S_treino[t-1]],ncol=1))
+        temp[g]<-exp(X[i,]%*%matrix(Beta_Post_Array[g,,S_treino[i-1]],ncol=1))
       }
       acumLL3 = acumLL3 + (X[i,]%*%matrix(Beta_Post_Array[S_treino[i],,S_treino[i-1]]) - log(sum(temp), base = exp(1)))
     }

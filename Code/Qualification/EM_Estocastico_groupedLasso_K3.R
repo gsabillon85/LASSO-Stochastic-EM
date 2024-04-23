@@ -59,7 +59,7 @@ Mat_trans <-function(covar){
 }
 
 
-T=1000 #Cumprimento da cadeia simulada
+T=1500 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
 D=10   #Quantidade de Covariaveis
 R<-30 #Numero de Replicas que serão executadas
@@ -458,9 +458,9 @@ for (p in 1:R){
           ##O ajuste para estimar os parâmetros de transição é
           ##feito aqui usando a função optim e os valores das
           #covariaveis filtradas
-          fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-          fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-          fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+          fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+          fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+          fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
           
           for (i in 1:K){
             for (d in 1:D){
@@ -553,8 +553,6 @@ for (p in 1:R){
         VeroSimActual=0
         val=1
         tolval[1]=1
-        
-        
         
         ###############################################
         #É possivel que na rerotulagem tinha ficado alguma transição com 0 ocorrencias então caso
@@ -811,7 +809,6 @@ for (p in 1:R){
   Betas_teste31 = Beta31_teste_vector[index_min,]
   Betas_teste32 = Beta32_teste_vector[index_min,]
   Betas_teste33 = Beta33_teste_vector[index_min,]
-  EQM_Teste[index_min]
   
   
   #Marcamos quais coeficientes foram zerados pelo LASSO

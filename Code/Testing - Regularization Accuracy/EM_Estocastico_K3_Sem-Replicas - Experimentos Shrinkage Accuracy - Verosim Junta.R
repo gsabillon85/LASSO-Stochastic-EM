@@ -4,13 +4,12 @@ library('label.switching')
 library(e1071)
 zero_threshold = 0.05
 N=500 #Tamanho da amostra Binomial
-T=650 #Cumprimento da cadeia simulada
+T=450 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
 D=6   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
-
 optim_algo = "BFGS"
 
 # Generate 20 random seeds to generate 20 random samples
@@ -118,20 +117,9 @@ for (p in 1:length(lambdas)){
     # Uma para a matriz Betas[,,1] uma para a matriz Betas[,,2] e uma para 
     # a matriz Betas[,,3]
     
-    # FSM1 <-function(params){#função a maximizar para achar os Betas_1
-    #   resp <- sum(1 - log(1 + exp(params[1]*Xtemp11[,1] + params[2]*Xtemp11[,2] + params[3]*Xtemp11[,3])+ exp(params[4]*Xtemp11[,1]+params[5]*Xtemp11[,2] + params[6]*Xtemp11[,3]))) + sum(params[1]*Xtemp12[,1] + params[2]*Xtemp12[,2] + params[3]*Xtemp12[,3] - log(1 + exp(params[1]*Xtemp12[,1] + params[2]*Xtemp12[,2] + params[3]*Xtemp12[,3]) + exp(params[4]*Xtemp12[,1]+params[5]*Xtemp12[,2] + params[6]*Xtemp12[,3] ))) + sum(params[4]*Xtemp13[,1] + params[5]*Xtemp13[,2] + params[6]*Xtemp13[,3] - log(1 + exp(params[1]*Xtemp13[,1] + params[2]*Xtemp13[,2] + params[3]*Xtemp13[,3]) + exp(params[4]*Xtemp13[,1]+params[5]*Xtemp13[,2] + params[6]*Xtemp13[,3]))) - 20*sum(abs(params[2:D])) 
-    # }
-    
     FSM1 <-function(params){#função a maximizar para achar os Betas_1
-      resp <- sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)]))) #lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6]))  #lambda*sum(abs(params[1:2*D])) 
-    }
-    
-    FSM2 <-function(params){#função a maximizar para achar os Betas_2
-      resp <- sum(1 - log(1 + exp(Xtemp21%*%params[1:D])+ exp(Xtemp21%*%params[(D+1):(2*D)]))) + sum((Xtemp22%*%params[1:D]) - log( 1 + exp(Xtemp22%*%params[1:D])+ exp(Xtemp22%*%params[(D+1):(2*D)]) )) + sum((Xtemp23%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp23%*%params[1:D])+ exp(Xtemp23%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))#lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6])) #lambda*sum(abs(params[1:2*D])) 
-    }
-    
-    FSM3 <-function(params){#função a maximizar para achar os Betas_3
-      resp <- sum(1 - log(1 + exp(Xtemp31%*%params[1:D])+ exp(Xtemp31%*%params[(D+1):(2*D)]))) + sum((Xtemp32%*%params[1:D]) - log( 1 + exp(Xtemp32%*%params[1:D])+ exp(Xtemp32%*%params[(D+1):(2*D)]) )) + sum((Xtemp33%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp33%*%params[1:D])+ exp(Xtemp33%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))#lambda*(abs(params[2]) + abs(params[3]) + abs(params[5]) + abs(params[6]))  #lambda*sum(abs(params[1:2*D])) 
+      resp <- (sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) ))) + ( sum(1 - log(1 + exp(Xtemp21%*%params[(2*D+1):(2*D+D)])+ exp(Xtemp21%*%params[((2*D)+(D+1)):((2*D)+2*D)]))) + sum((Xtemp22%*%params[((2*D)+1):((2*D)+D)]) - log( 1 + exp(Xtemp22%*%params[((2*D)+1):((2*D)+D)])+ exp(Xtemp22%*%params[((2*D)+(D+1)):((2*D)+2*D)]) )) + sum((Xtemp23%*%params[((2*D)+D+1):((2*D)+2*D)]) - log( 1 + exp(Xtemp23%*%params[((2*D)+1):((2*D)+D)])+ exp(Xtemp23%*%params[((2*D)+D+1):((2*D)+2*D)]))))  + (   sum(1 - log(1 + exp(Xtemp31%*%params[((4*D)+1):((4*D)+D)])+ exp(Xtemp31%*%params[((4*D)+D+1):((4*D)+2*D)]))) + sum((Xtemp32%*%params[((4*D)+1):((4*D)+D)]) - log( 1 + exp(Xtemp32%*%params[((4*D)+1):((4*D)+D)])+ exp(Xtemp32%*%params[((4*D)+D+1):((4*D)+2*D)]) )) + sum((Xtemp33%*%params[((4*D)+D+1):((4*D)+2*D)]) - log( 1 + exp(Xtemp33%*%params[((4*D)+1):((4*D)+D)])+ exp(Xtemp33%*%params[((4*D)+D+1):((4*D)+2*D)]) )) ) - lambda*(sum(abs(params[2:6*D])))
+      #print(resp)
     }
     
     ################################
@@ -163,10 +151,8 @@ for (p in 1:length(lambdas)){
     #######Primeiro geramos uma sequência não observavel de treinamento######
     P_Treino=rep(1/K,K) #Vetor de probabilidade utilizadas para gerar a sequência de treino
     S_treino<-NULL # Inicializamos a sequência oculta de treinamento
-    init1 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_1
-    init2 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_2
-    init3 = c(rnorm(D*(K-1)))#Valores iniciais para os Betas_3
-    
+    init1 = c(rnorm(D*K*(K-1)))#Valores iniciais para os Betas_1
+
     #Geramos uma sequência de treinamento
     for (i in 1:T) {
       S_treino[i] = rDiscreta(P_Treino)
@@ -310,9 +296,7 @@ for (p in 1:length(lambdas)){
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      
+  
       # Aqui atribuimos os valores estimados dos parâmetros de 
       # transição a um array que sera utilizado para recalcular 
       # a sequência S_treino na seguinte iteração do EM Est. 
@@ -336,9 +320,9 @@ for (p in 1:length(lambdas)){
           if (i == 1){
             BetaArray[i,d,2]=0
           } else if (i == 2){
-            BetaArray[i,d,2]=fit2$par[d]
+            BetaArray[i,d,2]=fit1$par[((2*D) + d)]
           } else if (i == 3){
-            BetaArray[i,d,2]=fit2$par[D+d]
+            BetaArray[i,d,2]=fit1$par[((2*D) + D+d)]
           }
           
         }
@@ -349,46 +333,16 @@ for (p in 1:length(lambdas)){
           if (i == 1){
             BetaArray[i,d,3]=0
           } else if (i == 2){
-            BetaArray[i,d,3]=fit3$par[d]
+            BetaArray[i,d,3]=fit1$par[((4*D) + d)]
           } else if (i == 3){
-            BetaArray[i,d,3]=fit3$par[D+d]
+            BetaArray[i,d,3]=fit1$par[((4*D) + D+d)]
           }
           
         }
       }
       
       
-      # BetaArray[1,1,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[2,1,1]=fit1$par[1]
-      # BetaArray[2,2,1]=fit1$par[2]
-      # BetaArray[2,3,1]=fit1$par[3]
-      # BetaArray[3,1,1]=fit1$par[4]
-      # BetaArray[3,2,1]=fit1$par[5]
-      # BetaArray[3,3,1]=fit1$par[6]
-      # 
-      # BetaArray[1,1,2]=0
-      # BetaArray[1,2,2]=0
-      # BetaArray[1,3,2]=0
-      # BetaArray[2,1,2]=fit2$par[1]
-      # BetaArray[2,2,2]=fit2$par[2]
-      # BetaArray[2,3,2]=fit2$par[3]
-      # BetaArray[3,1,2]=fit2$par[4]
-      # BetaArray[3,2,2]=fit2$par[5]
-      # BetaArray[3,3,2]=fit2$par[6]
-      # 
-      # Betas
-      # 
-      # BetaArray[1,1,3]=0
-      # BetaArray[1,2,3]=0
-      # BetaArray[1,3,3]=0
-      # BetaArray[2,1,3]=fit3$par[1]
-      # BetaArray[2,2,3]=fit3$par[2]
-      # BetaArray[2,3,3]=fit3$par[3]
-      # BetaArray[3,1,3]=fit3$par[4]
-      # BetaArray[3,2,3]=fit3$par[5]
-      # BetaArray[3,3,3]=fit3$par[6]
+  
       
       ac2VS1=0
       ac2VS2=0
@@ -524,8 +478,6 @@ for (p in 1:length(lambdas)){
       }
       
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       
       for (i in 1:K){
         for (d in 1:D){
@@ -545,9 +497,9 @@ for (p in 1:length(lambdas)){
           if (i == 1){
             BetaArray[i,d,2]=0
           } else if (i == 2){
-            BetaArray[i,d,2]=fit2$par[d]
+            BetaArray[i,d,2]=fit1$par[((2*D) + d)]
           } else if (i == 3){
-            BetaArray[i,d,2]=fit2$par[D+d]
+            BetaArray[i,d,2]=fit1$par[((2*D) + D+d)]
           }
           
         }
@@ -558,44 +510,15 @@ for (p in 1:length(lambdas)){
           if (i == 1){
             BetaArray[i,d,3]=0
           } else if (i == 2){
-            BetaArray[i,d,3]=fit3$par[d]
+            BetaArray[i,d,3]=fit1$par[((4*D) + d)]
           } else if (i == 3){
-            BetaArray[i,d,3]=fit3$par[D+d]
+            BetaArray[i,d,3]=fit1$par[((4*D) + D+d)]
           }
           
         }
       }
       
       
-      # BetaArray[1,1,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[1,2,1]=0
-      # BetaArray[2,1,1]=fit1$par[1]
-      # BetaArray[2,2,1]=fit1$par[2]
-      # BetaArray[2,3,1]=fit1$par[3]
-      # BetaArray[3,1,1]=fit1$par[4]
-      # BetaArray[3,2,1]=fit1$par[5]
-      # BetaArray[3,3,1]=fit1$par[6]
-      # 
-      # BetaArray[1,1,2]=0
-      # BetaArray[1,2,2]=0
-      # BetaArray[1,3,2]=0
-      # BetaArray[2,1,2]=fit2$par[1]
-      # BetaArray[2,2,2]=fit2$par[2]
-      # BetaArray[2,3,2]=fit2$par[3]
-      # BetaArray[3,1,2]=fit2$par[4]
-      # BetaArray[3,2,2]=fit2$par[5]
-      # BetaArray[3,3,2]=fit2$par[6]
-      # 
-      # BetaArray[1,1,3]=0
-      # BetaArray[1,2,3]=0
-      # BetaArray[1,3,3]=0
-      # BetaArray[2,1,3]=fit3$par[1]
-      # BetaArray[2,2,3]=fit3$par[2]
-      # BetaArray[2,3,3]=fit3$par[3]
-      # BetaArray[3,1,3]=fit3$par[4]
-      # BetaArray[3,2,3]=fit3$par[5]
-      # BetaArray[3,3,3]=fit3$par[6] 
       
       ac2VS1=0
       ac2VS2=0
@@ -660,9 +583,9 @@ for (p in 1:length(lambdas)){
         if (i == 1){
           Beta_Post_Array[i,d,2]=0
         } else if (i == 2){
-          Beta_Post_Array[i,d,2]=fit2$par[d]
+          Beta_Post_Array[i,d,2]=fit1$par[((2*D) + d)]
         } else if (i == 3){
-          Beta_Post_Array[i,d,2]=fit2$par[D+d]
+          Beta_Post_Array[i,d,2]=fit1$par[(((2*D)) + D+d)]
         }
         
       }
@@ -673,9 +596,9 @@ for (p in 1:length(lambdas)){
         if (i == 1){
           Beta_Post_Array[i,d,3]=0
         } else if (i == 2){
-          Beta_Post_Array[i,d,3]=fit3$par[d]
+          Beta_Post_Array[i,d,3]=fit1$par[((4*D) + d)]
         } else if (i == 3){
-          Beta_Post_Array[i,d,3]=fit3$par[D+d]
+          Beta_Post_Array[i,d,3]=fit1$par[((4*D) + D+d)]
         }
         
       }

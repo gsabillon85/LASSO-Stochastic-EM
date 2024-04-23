@@ -4,14 +4,14 @@ library('label.switching')
 library(e1071)
 zero_threshold = 0.05
 N=500 #Tamanho da amostra Binomial
-T=650 #Cumprimento da cadeia simulada
+T=1250 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
-D=6   #Quantidade de Covariaveis
+D=25   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 
-optim_algo = "BFGS"
+optim_algo = "Nelder-Mead"
 
 # Generate 20 random seeds to generate 20 random samples
 set.seed(10)

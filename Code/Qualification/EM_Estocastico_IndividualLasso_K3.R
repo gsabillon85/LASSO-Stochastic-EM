@@ -1,7 +1,7 @@
 library('label.switching')
 library("ggplot2")
-library("r2excel")
-library("xlsx")
+#library("r2excel")
+#library("xlsx")
 library(e1071)
 library(EnvStats)
 library("Matrix")
@@ -49,7 +49,7 @@ Mat_trans <-function(covar){
 }
 
 
-T=1000 #Cumprimento da cadeia simulada
+T=1500 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
 D=10   #Quantidade de Covariaveis
 R<-30 #Numero de Replicas que serão executadas
@@ -472,9 +472,9 @@ for (p in 1:R){
       ##O ajuste para estimar os parâmetros de transição é
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
-      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
       
       for (i in 1:K){
         for (d in 1:D){
@@ -696,9 +696,9 @@ for (p in 1:R){
       ##O ajuste para estimar os parâmetros de transição é
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
-      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
       
       for (i in 1:K){
         for (d in 1:D){
@@ -786,7 +786,7 @@ for (p in 1:R){
     Y_hat_teste[1]<-rnorm(1,mu_hat[S_hat_teste[1]],sigma_hat[S_hat_teste[1]])# O valor para o primeiro valor observavel
     for (t in 2:T_teste){
       prob<-NULL
-      for (i in 1:K) prob[i]<-exp(X_teste[t,]%*%matrix(BetaArray[i,,S_hat_teste[t-1]],ncol=1))
+      for (f in 1:K) prob[f]<-exp(X_teste[t,]%*%matrix(BetaArray[f,,S_hat_teste[t-1]],ncol=1))
       prob<-prob/sum(prob)
       S_hat_teste[t]<-which.max(prob)
       #S_hat_teste[t]<-rDiscreta(prob)
