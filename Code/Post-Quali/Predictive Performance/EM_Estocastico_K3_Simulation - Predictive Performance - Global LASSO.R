@@ -53,8 +53,8 @@ MSPE_Validação <- NULL
 MSPE_Teste <- NULL
 
 #Acertos na Sequência Oculta
-Acertos_S_Validação <- NULL
-Acertos_S_Teste <- NULL
+Acertos_S_Validação <- rep(0, R)
+Acertos_S_Teste <- rep(0, R)
 
 
 #Metricas de Zerado dos Coeficientes
@@ -63,7 +63,7 @@ Specificity = NULL
 Accuracy = NULL
 Pctgm_Zerado= NULL
 RMSE_Parameters = NULL
-Parameters = matrix(nrow = R, ncol = D*K*(K-1) )
+Best_Beta_Estimates = matrix(nrow = R, ncol = D*K*(K-1) )
 
 
 ## SEÇÃO DE DEFINICAÇÃO DOS PARAMETROS PARA SIMULAÇÃO DE DADOS ##
@@ -658,26 +658,29 @@ for (p in 1:R){
   } ##################################################
   # FIM DO PROCESSO DE ESTIMAÇÃO (LASSO)
   
-  # CAPTURA DE METRICAS PARA CADA REPLICA (Usando conjunto de Teste)
-  ##################################################################
   min_index = which.min(lasso_RMSE)
   
+  # CAPTURA DE METRICAS PARA CADA REPLICA
+  ##################################################################
   
+  # COLETANDO VALOR NO CONJUNTO DE VALIDAÇÃO
   
-  
-  
-  #Coletando melhores valores no Conjunto de Validação
-  
-  #Coletar valores estimados dos parâmetros das VA observaveis
+  # Coletar valores estimados dos parâmetros das VA observaveis
   Theta_Rep[p,] < lasso_theta_hat_estimates[min_index,]
+  Best_Beta_Estimates[p,] <- lasso_Beta_estimates[min_index,]
+  
+  # Coletar o valor da melhor sequência S
+  Best_S[p, ] <- lasso_S[min_index, ]
   
   #Metricas de Performance Preditiva 
   MSPE_Validação[p] <- lasso_RMSE[min_index] #Mean Square Predictive Error para o melhor lambda
   
+  
   #Metricas de Performance de Predição da sequência S
-  Acertos_S_Validação <- NULL
   for (i in 1:length(S_validation)) {
-    if (S_hat)
+    if (S_hat_validation[i] == Best_S[p,i]){
+      Acertos_S_Validação[p] =  Acertos_S_Validação[p] + 1
+    }
   }
   
   
