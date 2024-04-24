@@ -22,9 +22,9 @@ test_size = 0.10
 
 
 zero_threshold = 0.05
-R <- 2 # Numero de Replicas
+R <- 30 # Numero de Replicas
 N=500 #Tamanho da amostra Binomial
-T=400 #Cumprimento da cadeia simulada
+T=1200 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
 D=10   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
@@ -38,8 +38,7 @@ subDir = paste("Resultados_T",toString(T),"_D",toString(D),"_zero-threshold",toS
 dir.create(file.path(mainDir, subDir), showWarnings = FALSE)
 setwd(file.path(mainDir, subDir))
 
-# Generate 20 random seeds to generate 20 random samples
-set.seed(10)
+set.seed(1)
 seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
 lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75, 100, 200)
 #lambdas = lambdas_large
@@ -64,6 +63,7 @@ Accuracy = NULL
 Pctgm_Zerado= NULL
 RMSE_Parameters = NULL
 Best_Beta_Estimates = matrix(nrow = R, ncol = D*K*(K-1) )
+Best_S = matrix(nrow = R, ncol = (validation_size*T) )
 
 
 ## SEÇÃO DE DEFINICAÇÃO DOS PARAMETROS PARA SIMULAÇÃO DE DADOS ##
@@ -197,11 +197,13 @@ for (p in 1:R){
   
   # INICIO DO LASSO
   ###############################################
+  pb <- txtProgressBar(min = 1, max = length(lambdas), style = 3)
   print('Executando LASSO...')
   for (h in 1:length(lambdas)){
     tempo_inicial<-proc.time()#Calcularemos quanto demoro todo o proceso
-    message('\r', paste("Lasso iteration # = ",toString(lasso_iterator),"; Valor de Lambda = ",toString(lambdas[lasso_iterator])), appendLF = FALSE)
-    
+    #message('\r', paste("Lasso iteration # = ",toString(lasso_iterator),"; Valor de Lambda = ",toString(lambdas[lasso_iterator])), appendLF = FALSE)
+    cat('\r', paste("Lasso iteration # ",toString(lasso_iterator),"; Valor de Lambda = ",toString(lambdas[lasso_iterator])))
+    setTxtProgressBar(pb, lasso_iterator)
     #Estruturas necessarias no processo de estimação
     theta_hat = NULL #Variavel para estimar os thetas em cada iteração do EM Estocastico
     BetaArray = array(0, dim=c(K,D,K)) #Estrutura para guardar as estimativas dos Betas em cada iteração do EM
@@ -216,7 +218,6 @@ for (p in 1:R){
     # Com o temos um array de Betas, utilizaremos tres funções para achar os valores otimos
     # Uma para a matriz Betas[,,1] uma para a matriz Betas[,,2] e uma para 
     # a matriz Betas[,,3]
-    lambda <- lambdas[h]
     FSM1 <-function(params){#função a maximizar para achar os Betas_1
       resp <- sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))
     }
@@ -376,6 +377,7 @@ for (p in 1:R){
       ##O ajuste para estimar os parâmetros de transição é
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
+      
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
@@ -515,6 +517,31 @@ for (p in 1:R){
         acVS3 = acVS3 + (X[i,]%*%matrix(BetaArray[S_treino[i],,S_treino[i-1]]) - log(sum(temp), base = exp(1)))
       }
       VeroSimActual <- sum(log(choose(Nt_training,Y_training), base = exp(1))) + log(P0[S_treino[1]]) + acVS1 + acVS2 + acVS3 #calculo da LogVerosim
+      
+      #Este segmento de codigo testa se aconteceram todas as transições possiveis
+      #No caso que elas não tinham acontecido, as que
+      #não aconteceram são forçadas a acontecer
+      TransCount <- matrix(data = c(rep(0,K^2)), nrow = K, ncol = K)
+      for (i in 2:length(S_treino)) {
+        for (j in 1:K) {
+          for (k in 1:K) {
+            if (S_treino[i]==j && S_treino[i-1]==k)
+              TransCount[k,j]=TransCount[k,j]+1
+          }
+        }
+      }
+      
+      for (j in 1:K) {
+        for (k in 1:K) {
+          if (TransCount[k,j]==0){
+            positions = sample(2:length(S_treino), 4)
+            for (d in 1:4) {
+              S_treino[positions[d]]=j
+              S_treino[positions[d]-1]=k
+            }
+          }
+        }
+      }
       
       #filtragem dos dados
       Xtemp11<-NULL
@@ -663,7 +690,7 @@ for (p in 1:R){
   # CAPTURA DE METRICAS PARA CADA REPLICA
   ##################################################################
   
-  # COLETANDO VALOR NO CONJUNTO DE VALIDAÇÃO
+  # COLETANDO VALORES NO CONJUNTO DE VALIDAÇÃO
   
   # Coletar valores estimados dos parâmetros das VA observaveis
   Theta_Rep[p,] < lasso_theta_hat_estimates[min_index,]
@@ -675,35 +702,47 @@ for (p in 1:R){
   #Metricas de Performance Preditiva 
   MSPE_Validação[p] <- lasso_RMSE[min_index] #Mean Square Predictive Error para o melhor lambda
   
-  
-  #Metricas de Performance de Predição da sequência S
+  #Metricas de Predição da sequência S
   for (i in 1:length(S_validation)) {
-    if (S_hat_validation[i] == Best_S[p,i]){
+    if (S_validation[i] == Best_S[p,i]){
       Acertos_S_Validação[p] =  Acertos_S_Validação[p] + 1
     }
   }
   
   
-  MSPE_Teste <- NULL
-  
-  #Acertos na Sequência Oculta
-  
-  Acertos_S_Teste <- NULL
-  
-  
   #Metricas de Zerado dos Coeficientes
-  Sensitivity = NULL
-  Specificity = NULL
-  Accuracy = NULL
-  Pctgm_Zerado= NULL
-  RMSE_Parameters = NULL
-  Parameters = matrix(nrow = R, ncol = D*K*(K-1) )
+  TP = NULL
+  TN = NULL
+  FP = NULL
+  FN = NULL
   
+  for (j in 1:(D*K*(K-1))){
+    if ((Real[j]==0) && (abs(Best_Beta_Estimates[p,j])<=zero_threshold)){
+      TP[j] = 1
+    }
+    if ((Real[j]!=0) && (abs(Best_Beta_Estimates[p,j])>zero_threshold)){
+      TN[j]=1
+    }
+    if ((Real[j]!=0) && (abs(Best_Beta_Estimates[p,j])<=zero_threshold)){
+      FP[j]=1
+    }
+    if ((Real[j]==0) && (abs(Best_Beta_Estimates[p,j])>zero_threshold)){
+      FN[j]=1
+    }
+  }
+  
+  Pctgm_Zerado[p] = sum(abs(Best_Beta_Estimates[p,]<=zero_threshold))/(D*K*(K-1))
+  Sensitivity[p] = sum(TP, na.rm = TRUE) / ( sum(TP, na.rm = TRUE) +  sum(FN, na.rm = TRUE) )
+  Specificity[p] = sum(TN, na.rm = TRUE) / ( sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) )
+  Accuracy[p] = (sum(TN, na.rm = TRUE) + sum(TP, na.rm = TRUE)) / ( sum(TP, na.rm = TRUE) + sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) + sum(FN, na.rm = TRUE))
+  RMSE_Parameters[p] = sum((Real - Best_Beta_Estimates[p,])^2)
   
 } #FIM DAS REPLICAS 
-  
-lasso_Beta_estimates[which.min(lasso_RMSE),]
-Real
+
+tempo_final<-proc.time()
+
+mean(Sensitivity)
+tempo_final[1] - tempo_inicial[1]
 
 df_avgs<-data.frame(cbind(lambdas, avg_Sensitivity, avg_Specificity, avg_Accuracy, avg_pctgm_zerado, avg_RMSE))
 df_sd <- data.frame(cbind(lambdas, sd_Sensitivity, sd_Specificity, sd_Accuracy, sd_pctgm_zerado, sd_RMSE))
