@@ -914,17 +914,6 @@ for (p in 1:R){
   sigma_Rep[p,2] = sigma_hat[2]
   sigma_Rep[p,3] = sigma_hat[3]
   
-  # Calculamos os Vieses para cada um dos parametros 
-  # em cada uma das replicas, e almacenamos eles
-  
-  # Vies_Table[1,p]<-Betas[2,1,1]-BetaArray[2,1,1]
-  # Vies_Table[2,p]<-Betas[2,2,1]-BetaArray[2,2,1]
-  # Vies_Table[3,p]<-Betas[2,3,1]-BetaArray[2,3,1]
-  # 
-  # Vies_Table[4,p]<-Betas[2,1,2]-BetaArray[2,1,2]
-  # Vies_Table[5,p]<-Betas[2,2,2]-BetaArray[2,2,2]
-  # Vies_Table[6,p]<-Betas[2,3,2]-BetaArray[2,3,2]
-  
   
   LL2_parte1 = 0
   LL2_parte2 = 0
