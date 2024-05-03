@@ -59,10 +59,10 @@ Mat_trans <-function(covar){
 }
 
 
-T=1500 #Cumprimento da cadeia simulada
+T=600 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
-D=10   #Quantidade de Covariaveis
-R<-30 #Numero de Replicas que serão executadas
+D=6   #Quantidade de Covariaveis
+R<-10 #Numero de Replicas que serão executadas
 tol<-0.0001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 
 ##Tamanhos das bases
@@ -88,8 +88,8 @@ header<-paste("Resultados para K=", toString(K), "e T=",toString(T), collapse = 
 
 
 
-set.seed(40)
-seeds<-sample(1:100000,R)
+set.seed(3)
+seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
 options(digits=6)
 options(scipen=999)
 
@@ -191,27 +191,6 @@ for (i in 1:K){
 }
 
 
-seeds[4] = 305
-seeds[5] = 310
-seeds[6] = 300
-seeds[8] = 300
-seeds[9] = 3005
-seeds[10] = 30106
-seeds[11] = 3008
-seeds[14] = 30031
-seeds[15] = 860
-seeds[16] = 301065
-seeds[17] = 3010878
-seeds[17] = 3010873
-seeds[19] = 2310
-seeds[21] = 353005
-seeds[22] = 47
-seeds[23] = 443008
-seeds[26] = 30090
-seeds[27] = 30051
-seeds[28] = 317
-seeds[29] = 43611
-
 T1 = proc.time()
 #Inicio das Replicas
 for (p in 1:R){
@@ -303,8 +282,10 @@ for (p in 1:R){
   
   #Antes de Rodar o EM Estocástico, precisaremos de algumas estruturas para
   #almacenar os valores de mu_hat, sigma_hat, S_treino
-  lambdas = seq(log(exp(0.001)), log(10000000), len=19)
-  lambdas = append(0,lambdas)
+  #lambdas = seq(log(exp(0.001)), log(10000000), len=19)
+  #lambdas = append(0,lambdas)
+  lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75, 100, 200)
+  
   #lambdas = get.lambda.l1(X_training,Y_training,50)
   #lambdas <- c(0.01, 0.05, 0.1, 0.15, 0.5, 0.75, 1, 1.5, 2, 4, 5, 10)
   mu_teste_vector = matrix(nrow = length(lambdas)^K, ncol = K)
@@ -680,9 +661,9 @@ for (p in 1:R){
           ##O ajuste para estimar os parâmetros de transição é
           ##feito aqui usando a função optim e os valores das
           #covariaveis filtradas
-          fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-          fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-          fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+          fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+          fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+          fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
           
           for (i in 1:K){
             for (d in 1:D){

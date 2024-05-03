@@ -16,17 +16,17 @@ rDiscreta<-function(p){
 #####
 
 
-train_size = 0.70
-validation_size = 0.20
-test_size = 0.10
+train_size = 0.80
+validation_size = 0.15
+test_size = 0.05
 
 
 zero_threshold = 0.05
 R <- 30 # Numero de Replicas
 N=500 #Tamanho da amostra Binomial
-T=1200 #Cumprimento da cadeia simulada
+T=600 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
-D=10   #Quantidade de Covariaveis
+D=6   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
@@ -38,14 +38,14 @@ subDir = paste("Resultados_T",toString(T),"_D",toString(D),"_zero-threshold",toS
 dir.create(file.path(mainDir, subDir), showWarnings = FALSE)
 setwd(file.path(mainDir, subDir))
 
-set.seed(1)
+set.seed(3)
 seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
 lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75, 100, 200)
 #lambdas = lambdas_large
 
 # 
 #Metricas de Performance de Estimação dos ParÂmetros das VA observáveis
-Theta_Rep=NULL
+Theta_Rep=matrix(nrow = R, ncol = K )
 
 #Metricas de Performance Preditiva 
 MSPE_Validação <- NULL
@@ -74,38 +74,65 @@ Real=NULL
 
 #Fazemos o valor iniciais dos Betas da transição 1 igual a 0, para ter a função de Ligação mlogit
 #Além disso setamos alguns Betas manualmente para controla a simulação
-Betas[1,1,1]=0
-Betas[1,2,1]=0
-Betas[1,3,1]=0
-Betas[2,1,1]=0
-Betas[2,2,1]=-1.9
-Betas[2,3,1]=0
-Betas[3,1,1]=-2.3
-Betas[3,2,1]=0
-Betas[3,3,1]=0
+#Betas[1,1,1]=0
+#Betas[1,2,1]=0
+#Betas[1,3,1]=0
+#Betas[2,1,1]=0
+#Betas[2,2,1]=-1.9
+#Betas[2,3,1]=0
+#Betas[3,1,1]=-2.3
+#Betas[3,2,1]=0
+#Betas[3,3,1]=0
 
-Betas[1,1,2]=0
-Betas[1,2,2]=0
-Betas[1,3,2]=0
-Betas[2,1,2]=2.4
-Betas[2,2,2]=0
-Betas[2,3,2]=-1.5
-Betas[3,1,2]=0
-Betas[3,2,2]=0
-Betas[3,3,2]=2.2
+#Betas[1,1,2]=0
+#Betas[1,2,2]=0
+#Betas[1,3,2]=0
+#Betas[2,1,2]=2.4
+#Betas[2,2,2]=0
+#Betas[2,3,2]=-1.5
+#Betas[3,1,2]=0
+#Betas[3,2,2]=0
+#Betas[3,3,2]=2.2
 
-Betas[1,1,3]=0
-Betas[1,2,3]=0
-Betas[1,3,3]=0
-Betas[2,1,3]=0
-Betas[2,2,3]=0
-Betas[2,3,3]=-1.3
-Betas[3,1,3]=0
-Betas[3,2,3]=-2.3
-Betas[3,3,3]=1.7
+
+#Betas[1,1,3]=0
+#Betas[1,2,3]=0
+#Betas[1,3,3]=0
+#Betas[2,1,3]=0
+#Betas[2,2,3]=0
+#Betas[2,3,3]=-1.3
+#Betas[3,1,3]=0
+#Betas[3,2,3]=-2.3
+#Betas[3,3,3]=1.7
+
+Betas[2,1,1]=-1.5
+Betas[2,2,1]=1.5
+Betas[2,3,1]=-2.6
+
+Betas[2,1,2]=-2.0
+Betas[2,2,2]=4.6
+Betas[2,3,2]=1.4
+
+Betas[2,1,3]=2.4
+Betas[2,2,3]=1.1
+Betas[2,3,3]=-1.5
+
+# Betas transição 3
+Betas[3,1,1]=1.3
+Betas[3,2,1]=3.2
+Betas[3,3,1]=2.4
+
+Betas[3,1,2]=-3.3
+Betas[3,2,2]=1.7
+Betas[3,3,2]=1.3
+
+Betas[3,1,3]=-2.3
+Betas[3,2,3]=-2.7
+Betas[3,3,3]=-3.5
+
 
 # -- Caracteristicas Especificas para a distribuição das VA observaveis
-theta=c(0.25,0.5,0.75) # vetor com a probabilidade de sucesso das K distribuiçoes Binomiais
+theta=c(0.15,0.5,0.85) # vetor com a probabilidade de sucesso das K distribuiçoes Binomiais
 Nt=rep(N,T) # número de ensaios de Bernoulli associado a dada uma das T variáveis Binomiais. Cada coloquei tudo igual mas eles podem diferentes.
 
 #Criar vetor de valores reais de Betas para comparar com o vetor de betas estimados
@@ -693,7 +720,7 @@ for (p in 1:R){
   # COLETANDO VALORES NO CONJUNTO DE VALIDAÇÃO
   
   # Coletar valores estimados dos parâmetros das VA observaveis
-  Theta_Rep[p,] < lasso_theta_hat_estimates[min_index,]
+  Theta_Rep[p,] <- lasso_theta_hat_estimates[min_index,]
   Best_Beta_Estimates[p,] <- lasso_Beta_estimates[min_index,]
   
   # Coletar o valor da melhor sequência S
@@ -731,7 +758,7 @@ for (p in 1:R){
     }
   }
   
-  Pctgm_Zerado[p] = sum(abs(Best_Beta_Estimates[p,]<=zero_threshold))/(D*K*(K-1))
+  Pctgm_Zerado[p] = sum(abs(Best_Beta_Estimates[p,])<=zero_threshold)/(D*K*(K-1))
   Sensitivity[p] = sum(TP, na.rm = TRUE) / ( sum(TP, na.rm = TRUE) +  sum(FN, na.rm = TRUE) )
   Specificity[p] = sum(TN, na.rm = TRUE) / ( sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) )
   Accuracy[p] = (sum(TN, na.rm = TRUE) + sum(TP, na.rm = TRUE)) / ( sum(TP, na.rm = TRUE) + sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) + sum(FN, na.rm = TRUE))
@@ -740,8 +767,10 @@ for (p in 1:R){
 } #FIM DAS REPLICAS 
 
 tempo_final<-proc.time()
-
-mean(Sensitivity)
+mean(Accuracy)
+Acertos_S_Validação/length(S_validation)
+median(Acertos_S_Validação/length(S_validation))
+mean(Acertos_S_Validação/length(S_validation))
 tempo_final[1] - tempo_inicial[1]
 
 df_avgs<-data.frame(cbind(lambdas, avg_Sensitivity, avg_Specificity, avg_Accuracy, avg_pctgm_zerado, avg_RMSE))

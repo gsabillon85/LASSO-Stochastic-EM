@@ -49,9 +49,9 @@ Mat_trans <-function(covar){
 }
 
 
-T=1500 #Cumprimento da cadeia simulada
+T=400 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
-D=10   #Quantidade de Covariaveis
+D=15   #Quantidade de Covariaveis
 R<-30 #Numero de Replicas que serão executadas
 tol<-0.0001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 
@@ -75,10 +75,10 @@ nome_arquivo<-paste(arqname,collapse = "")
 nomefolha<-paste("Saida T=",toString(T))
 header<-paste("Resultados para K=", toString(K), "e T=",toString(T), collapse = "")
 
+optim_alg = "BFGS"
 
 
-
-set.seed(40)
+set.seed(3)
 seeds<-sample(1:100000,R)
 options(digits=6)
 options(scipen=999)
@@ -319,7 +319,7 @@ for (p in 1:R){
   
   #Antes de Rodar o EM Estocástico, precisaremos de algumas estruturas para
   #almacenar os valores de mu_hat, sigma_hat, S_treino
-  lambdas = seq(log(exp(0.001)), log(10000000), len=499)
+  lambdas = seq(log(exp(0.001)), 25, len=25)
   lambdas = append(0,lambdas)
   #lambdas = get.lambda.l1(X_training,Y_training,50)
   #lambdas <- c(0.01, 0.05, 0.1, 0.15, 0.5, 0.75, 1, 1.5, 2, 4, 5, 10)
@@ -472,9 +472,9 @@ for (p in 1:R){
       ##O ajuste para estimar os parâmetros de transição é
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
-      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_alg, hessian = FALSE)
+      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_alg, hessian = FALSE)
+      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_alg, hessian = FALSE)
       
       for (i in 1:K){
         for (d in 1:D){
@@ -696,9 +696,9 @@ for (p in 1:R){
       ##O ajuste para estimar os parâmetros de transição é
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
-      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "BFGS", hessian = FALSE)
+      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_alg, hessian = FALSE)
+      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_alg, hessian = FALSE)
+      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_alg, hessian = FALSE)
       
       for (i in 1:K){
         for (d in 1:D){
