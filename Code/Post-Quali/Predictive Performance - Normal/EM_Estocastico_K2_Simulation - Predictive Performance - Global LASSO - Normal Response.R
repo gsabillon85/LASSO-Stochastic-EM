@@ -26,18 +26,18 @@ test_size = 0.05
 
 zero_threshold = 0.05
 R <- 30 # Numero de Replicas
-T=2000 #Cumprimento da cadeia simulada
-K=3   #Numero de estados ocultos
+T=1200 #Cumprimento da cadeia simulada
+K=2   #Numero de estados ocultos
 D=6   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 optim_algo = "BFGS" #Algorithm to use in the optimization process
-n_max_iter_EM = 100
+n_max_iter_EM = 50
 Tempo <- NULL
 
 cenario <- "TESTANDO_CODIGO"
-mainDir = paste("/home/gustavo/Projects/LASSO-NHMM/Code/Post-Quali/Predictive Performance - Normal/Global LASSO Results/K3/",cenario,sep = "")
+mainDir = paste("/home/gustavo/Projects/LASSO-NHMM/Code/Post-Quali/Predictive Performance - Normal/Global LASSO Results/K2/",cenario,sep = "")
 subDir = paste("Resultados_T",toString(T),"_D",toString(D),"_zero-threshold",toString(zero_threshold),"optimethod",toString(optim_algo))
 dir.create(file.path(mainDir, subDir), showWarnings = FALSE)
 setwd(file.path(mainDir, subDir))
@@ -118,27 +118,10 @@ Betas[2,1,2]=-2.0
 Betas[2,2,2]=2.6
 Betas[2,3,2]=1.4
 
-Betas[2,1,3]=-2.4
-Betas[2,2,3]=2.1
-Betas[2,3,3]=-1.5
-
-# Betas transição 3
-Betas[3,1,1]=-1.3
-Betas[3,2,1]=-3.2
-Betas[3,3,1]=-2.4
-
-Betas[3,1,2]=-1.3
-Betas[3,2,2]=1.7
-Betas[3,3,2]=1.3
-
-Betas[3,1,3]=-1.3
-Betas[3,2,3]=-2.7
-Betas[3,3,3]=-2.5
-
 
 # -- Caracteristicas Especificas para a distribuição das VA observaveis
-mu = c(20,150,250) # vetor com media para as duas Normais
-sigma = c(1,1.5,0.5) #Vetor com os desvios padrões para as duas normais
+mu = c(20,150) # vetor com media para as duas Normais
+sigma = c(1,1.5) #Vetor com os desvios padrões para as duas normais
 
 
 #Criar vetor de valores reais de Betas para comparar com o vetor de betas estimados
@@ -236,8 +219,7 @@ for (p in 1:R){
   
   init1 = c(rnorm(D*(K-1), 0, 5))#Valores iniciais para os Betas_1
   init2 = c(rnorm(D*(K-1), 0, 5))#Valores iniciais para os Betas_2
-  init3 = c(rnorm(D*(K-1), 0, 5))#Valores iniciais para os Betas_3
-  
+ 
   lasso_iterator = 1 #Criamos um contador para iterar a traves dos valores de lambda
   
   # Algumas estruturas para almacenar valores gerados pelo LASSO
@@ -272,18 +254,12 @@ for (p in 1:R){
     # Uma para a matriz Betas[,,1] uma para a matriz Betas[,,2] e uma para 
     # a matriz Betas[,,3]
     FSM1 <-function(params){#função a maximizar para achar os Betas_1
-      resp <- sum(1 - log(1 + exp(Xtemp11%*%params[1:D])+ exp(Xtemp11%*%params[(D+1):(2*D)]))) + sum((Xtemp12%*%params[1:D]) - log( 1 + exp(Xtemp12%*%params[1:D])+ exp(Xtemp12%*%params[(D+1):(2*D)]) )) + sum((Xtemp13%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp13%*%params[1:D])+ exp(Xtemp13%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))
+      resp <- (sum(1 - log(1 + exp(Xtemp11%*%params))) + sum(Xtemp12%*%params - log(1 + exp(Xtemp12%*%params)))) - lambda*sum(abs(params[2:D])) 
     }
     
     FSM2 <-function(params){#função a maximizar para achar os Betas_2
-      resp <- sum(1 - log(1 + exp(Xtemp21%*%params[1:D])+ exp(Xtemp21%*%params[(D+1):(2*D)]))) + sum((Xtemp22%*%params[1:D]) - log( 1 + exp(Xtemp22%*%params[1:D])+ exp(Xtemp22%*%params[(D+1):(2*D)]) )) + sum((Xtemp23%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp23%*%params[1:D])+ exp(Xtemp23%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))
+      resp <- (sum(1 - log(1 + exp(Xtemp21%*%params))) + sum(Xtemp22%*%params - log(1 + exp(Xtemp22%*%params))))  - lambda*sum(abs(params[2:D]))
     }
-    
-    FSM3 <-function(params){#função a maximizar para achar os Betas_3
-      resp <- sum(1 - log(1 + exp(Xtemp31%*%params[1:D])+ exp(Xtemp31%*%params[(D+1):(2*D)]))) + sum((Xtemp32%*%params[1:D]) - log( 1 + exp(Xtemp32%*%params[1:D])+ exp(Xtemp32%*%params[(D+1):(2*D)]) )) + sum((Xtemp33%*%params[(D+1):(2*D)]) - log( 1 + exp(Xtemp33%*%params[1:D])+ exp(Xtemp33%*%params[(D+1):(2*D)]) )) - lambda*(sum(abs(params[2:D])) + sum(abs(params[(D+2):(2*D)])))
-    }
-    
-    
     
     
     #   Procedimento de Estimação   
@@ -407,13 +383,8 @@ for (p in 1:R){
       #### Aqui inicia a filtragem dos dados para cada iteração
       Xtemp11<-NULL
       Xtemp12<-NULL
-      Xtemp13<-NULL
       Xtemp21<-NULL
       Xtemp22<-NULL
-      Xtemp23<-NULL
-      Xtemp31<-NULL
-      Xtemp32<-NULL
-      Xtemp33<-NULL
       
       for (t in 2:length(S_training)) {
         #filtros indo para o Estado # 1
@@ -423,29 +394,13 @@ for (p in 1:R){
         if(S_treino[t]%in%1 && S_treino[t-1]%in%2)
           Xtemp21<-rbind(Xtemp21, X[t,])
         
-        if(S_treino[t]%in%1 && S_treino[t-1]%in%3)
-          Xtemp31<-rbind(Xtemp31, X[t,])
-        
         #Filtros indo para o Estado # 2
         if(S_treino[t]%in%2 && S_treino[t-1]%in%1)
           Xtemp12<-rbind(Xtemp12, X[t,])
         
         if(S_treino[t]%in%2 && S_treino[t-1]%in%2)
           Xtemp22<-rbind(Xtemp22, X[t,])
-        
-        if(S_treino[t]%in%2 && S_treino[t-1]%in%3)
-          Xtemp32<-rbind(Xtemp32, X[t,])
-        
-        #Filtros indo para o Estado # 3
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%1)
-          Xtemp13<-rbind(Xtemp13, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%2)
-          Xtemp23<-rbind(Xtemp23, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%3)
-          Xtemp33<-rbind(Xtemp33, X[t,])
-      }
+        }
       
       
       ##O ajuste para estimar os parâmetros de transição é
@@ -454,8 +409,7 @@ for (p in 1:R){
       
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
       fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      
+
       # Aqui atribuimos os valores estimados dos parâmetros de 
       # transição a um array que sera utilizado para recalcular 
       # a sequência S_treino na seguinte iteração do EM Est. 
@@ -486,20 +440,6 @@ for (p in 1:R){
           
         }
       }
-      
-      for (i in 1:K){
-        for (d in 1:D){
-          if (i == 1){
-            BetaArray[i,d,3]=0
-          } else if (i == 2){
-            BetaArray[i,d,3]=fit3$par[d]
-          } else if (i == 3){
-            BetaArray[i,d,3]=fit3$par[D+d]
-          }
-          
-        }
-      }
-      
       
       LL2_parte1 = 0
       LL2_parte2 = 0
@@ -541,7 +481,7 @@ for (p in 1:R){
     mat_S<-matrix(nrow = 1, ncol = length(S_training))
     mat_S[1,]<-S_treino
     zpvt_S = S #Como pivot para o metodo ECR usamos o S original
-    perms_S = ecr(zpivot = zpvt_S, z = mat_S, K = 3)# aplicamos o metodo ECR que retornara as permutações das dos estados ocultos que devem ser utilizadas para reordenar a saida do algoritmo bayesiano
+    perms_S = ecr(zpivot = zpvt_S, z = mat_S, K = K)# aplicamos o metodo ECR que retornara as permutações das dos estados ocultos que devem ser utilizadas para reordenar a saida do algoritmo bayesiano
     
     # Reordenamos a saido do algoritmo EMEst usando as 
     # permutações fornecidas pelo ECR para K=3 
@@ -551,7 +491,7 @@ for (p in 1:R){
     
     for (i in 1:1) {
       for (j in 1:length(S_training)) {
-        if(S_treino[j]!=S_training[j] && ((perms_S$permutations[i,1]==2 && perms_S$permutations[i,2]==3 && perms_S$permutations[i,3]==1) | (perms_S$permutations[i,1]==3 && perms_S$permutations[i,2]==1 && perms_S$permutations[i,3]==2))){
+        if(S_treino[j]!=S_training[j] && ((perms_S$permutations[i,1]==2 && perms_S$permutations[i,2]==1))){
           S_treino[j]=perms_S$permutations[i,perms_S$permutations[i,S_treino[j]]]
         }
         
@@ -629,13 +569,8 @@ for (p in 1:R){
       #filtragem dos dados
       Xtemp11<-NULL
       Xtemp12<-NULL
-      Xtemp13<-NULL
       Xtemp21<-NULL
       Xtemp22<-NULL
-      Xtemp23<-NULL
-      Xtemp31<-NULL
-      Xtemp32<-NULL
-      Xtemp33<-NULL
       
       for (t in 2:length(S_training)) {
         #filtros indo para o Estado # 1
@@ -644,10 +579,7 @@ for (p in 1:R){
         
         if(S_treino[t]%in%1 && S_treino[t-1]%in%2)
           Xtemp21<-rbind(Xtemp21, X[t,])
-        
-        if(S_treino[t]%in%1 && S_treino[t-1]%in%3)
-          Xtemp31<-rbind(Xtemp31, X[t,])
-        
+    
         #Filtros indo para o Estado # 2
         if(S_treino[t]%in%2 && S_treino[t-1]%in%1)
           Xtemp12<-rbind(Xtemp12, X[t,])
@@ -655,24 +587,11 @@ for (p in 1:R){
         if(S_treino[t]%in%2 && S_treino[t-1]%in%2)
           Xtemp22<-rbind(Xtemp22, X[t,])
         
-        if(S_treino[t]%in%2 && S_treino[t-1]%in%3)
-          Xtemp32<-rbind(Xtemp32, X[t,])
-        
-        #Filtros indo para o Estado # 3
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%1)
-          Xtemp13<-rbind(Xtemp13, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%2)
-          Xtemp23<-rbind(Xtemp23, X[t,])
-        
-        if(S_treino[t]%in%3 && S_treino[t-1]%in%3)
-          Xtemp33<-rbind(Xtemp33, X[t,])
       }
       
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
-      
+
       for (i in 1:K){
         for (d in 1:D){
           if (i == 1){
@@ -694,19 +613,6 @@ for (p in 1:R){
             BetaArray[i,d,2]=fit2$par[d]
           } else if (i == 3){
             BetaArray[i,d,2]=fit2$par[D+d]
-          }
-          
-        }
-      }
-      
-      for (i in 1:K){
-        for (d in 1:D){
-          if (i == 1){
-            BetaArray[i,d,3]=0
-          } else if (i == 2){
-            BetaArray[i,d,3]=fit3$par[d]
-          } else if (i == 3){
-            BetaArray[i,d,3]=fit3$par[D+d]
           }
           
         }
@@ -784,7 +690,7 @@ for (p in 1:R){
   # COLETANDO VALORES NO CONJUNTO DE VALIDAÇÃO
   
   # Valor de Lambda optimo
-  Best_Lambdas[p] <- lambdas[lasso_iterator]
+  Best_Lambdas[p] <- lambdas[min_index]
   
   # Coletar valores estimados dos parâmetros das VA observaveis
   Mu_Rep[p,] <- lasso_mu_hat_estimates[min_index,]
@@ -941,24 +847,22 @@ for (i in 1:K) {
 }
 
 #calculo dos quanties para os parametros
-quantiles<-matrix(nrow = 6, ncol = 2)
+quantiles<-matrix(nrow = 4, ncol = 2)
 quantiles[1,]<-quantile(Mu_Rep[,1],probs = c(0.025, 0.975))
 quantiles[2,]<-quantile(Mu_Rep[,2],probs = c(0.025, 0.975))
-quantiles[3,]<-quantile(Mu_Rep[,3],probs = c(0.025, 0.975))
-quantiles[4,]<-quantile(Sigma_Rep[,1],probs = c(0.025, 0.975))
-quantiles[5,]<-quantile(Sigma_Rep[,2],probs = c(0.025, 0.975))
-quantiles[6,]<-quantile(Sigma_Rep[,3],probs = c(0.025, 0.975))
+quantiles[3,]<-quantile(Sigma_Rep[,1],probs = c(0.025, 0.975))
+quantiles[4,]<-quantile(Sigma_Rep[,2],probs = c(0.025, 0.975))
 
 #Juntamos as Metricas dos parametros das distribuições observaveis num dataframe
-Parametro<-c("Mu_1","Mu_2","Mu_3", "Sigma_1", "Sigma_2", "Sigma_3")
-Real<-c(mu[1],mu[2],mu[3], sigma[1],sigma[2], sigma[3])
-Estimado_Mean<-c(Mu_Finais_Mean[1],Mu_Finais_Mean[2],Mu_Finais_Mean[3], Sigma_Finais_Mean[1], Sigma_Finais_Mean[2], Sigma_Finais_Mean[3])
-Estimado_Median<-c(Mu_Finais_Median[1],Mu_Finais_Median[2],Mu_Finais_Median[3], Sigma_Finais_Median[1], Sigma_Finais_Median[2], Sigma_Finais_Median[3])
-SD<-c(SD_Mu[1],SD_Mu[2], SD_Mu[3], SD_Sigma[1],SD_Sigma[2],SD_Sigma[3])
-Vies<-c(Vies_Mu[1],Vies_Mu[2],Vies_Mu[3], Vies_Sigma[1], Vies_Sigma[2],Vies_Sigma[3])
-EQM<-c(EQM_Mu[1],EQM_Mu[2],EQM_Mu[3], EQM_Sigma[1], EQM_Sigma[2],EQM_Sigma[3])
-Assimetria<-c(skewness(Mu_Rep[,1]), skewness(Mu_Rep[,2]),skewness(Mu_Rep[,3]), skewness(Sigma_Rep[,1]), skewness(Sigma_Rep[,2]), skewness(Sigma_Rep[,3]))
-IC_95<-c(toString(quantiles[1,]),toString(quantiles[2,]),toString(quantiles[3,]),toString(quantiles[4,]),toString(quantiles[5,]),toString(quantiles[6,]))
+Parametro<-c("Mu_1","Mu_2", "Sigma_1", "Sigma_2")
+Real<-c(mu[1],mu[2], sigma[1],sigma[2])
+Estimado_Mean<-c(Mu_Finais_Mean[1],Mu_Finais_Mean[2], Sigma_Finais_Mean[1], Sigma_Finais_Mean[2])
+Estimado_Median<-c(Mu_Finais_Median[1],Mu_Finais_Median[2], Sigma_Finais_Median[1], Sigma_Finais_Median[2])
+SD<-c(SD_Mu[1],SD_Mu[2],  SD_Sigma[1],SD_Sigma[2])
+Vies<-c(Vies_Mu[1],Vies_Mu[2],Vies_Sigma[1], Vies_Sigma[2])
+EQM<-c(EQM_Mu[1],EQM_Mu[2], EQM_Sigma[1], EQM_Sigma[2])
+Assimetria<-c(skewness(Mu_Rep[,1]), skewness(Mu_Rep[,2]), skewness(Sigma_Rep[,1]), skewness(Sigma_Rep[,2]))
+IC_95<-c(toString(quantiles[1,]),toString(quantiles[2,]),toString(quantiles[3,]),toString(quantiles[4,]))
 
 #Criamos o DAtaframe
 df1<-data.frame(Parametro,Real,Estimado_Mean, Estimado_Median,SD,Vies,EQM,Assimetria,IC_95)

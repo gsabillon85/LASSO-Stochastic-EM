@@ -1,0 +1,2 @@
+"Chain_Length","EQM_Validação_Median_Final","EQM_Validação_Mean_Final","EQM_Validação_SD","EQM_Test_Median_Final","EQM_Test_Mean_Final","EQM_Test_SD","EQM_Test_Median_arima","EQM_Test_Mean_arima","EQM_Test_SD_arima","EQM_Test_Median_glmnet","EQM_Test_Mean_glmnet","EQM_Test_SD_glmnet"
+"T = 1200",2736.58366370528,2779.10867878252,484.195520417841,3136.15992921373,3135.27724479511,611.732282953886,3361.5595670414,3425.56562762136,531.255527764672,3330.43730830487,3383.01575021659,479.250624707577
