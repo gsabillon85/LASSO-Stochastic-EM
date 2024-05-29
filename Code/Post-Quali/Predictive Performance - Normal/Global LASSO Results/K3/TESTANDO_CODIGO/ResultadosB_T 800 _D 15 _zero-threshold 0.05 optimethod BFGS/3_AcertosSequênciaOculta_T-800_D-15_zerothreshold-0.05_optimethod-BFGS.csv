@@ -1,0 +1,12 @@
+Chain_Length,Acertos_Validação_Mean_Final,Acertos_Validação_Median_Final,Acertos_Validação_SD,Acertos_Teste_Mean_Final,Acertos_Teste_Median_Final,Acertos_Teste_SD
+T = 800,0.724166666666667,725,0.0552002527279954,0.69,0.7,0.104880884817015
+,,,,,,
+,,,,,,
+,,,,,,
+Chain_Length,T = 800,,,,,
+Acertos_Validação_Mean_Final,"0,724",,,,,
+Acertos_Validação_Median_Final,"0,725",,,,,
+Acertos_Validação_SD,"0,055",,,,,
+Acertos_Teste_Mean_Final,"0,690",,,,,
+Acertos_Teste_Median_Final,"0,700",,,,,
+Acertos_Teste_SD,"0,105",,,,,

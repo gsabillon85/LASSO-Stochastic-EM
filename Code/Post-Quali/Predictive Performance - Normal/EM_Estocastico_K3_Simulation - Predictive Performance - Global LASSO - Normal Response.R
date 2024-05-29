@@ -1,3 +1,9 @@
+###############################################################
+#                                                             #
+#            GLOBAL LASSO - 3 ESTADOS OCULTOS                 #
+#                                                             #
+###############################################################
+
 library('label.switching')
 library(glmnet) # Regressão Linear Penalizada
 library(forecast) # Auto Regressive Integrated Moving Average
@@ -25,15 +31,15 @@ test_size = 0.05
 
 
 zero_threshold = 0.05
-R <- 30 # Numero de Replicas
-T=2000 #Cumprimento da cadeia simulada
+R <- 6 # Numero de Replicas
+T=1200 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
-D=6   #Quantidade de Covariaveis
+D=8   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 optim_algo = "BFGS" #Algorithm to use in the optimization process
-n_max_iter_EM = 100
+n_max_iter_EM = 50
 Tempo <- NULL
 
 cenario <- "TESTANDO_CODIGO"
@@ -42,11 +48,12 @@ subDir = paste("Resultados_T",toString(T),"_D",toString(D),"_zero-threshold",toS
 dir.create(file.path(mainDir, subDir), showWarnings = FALSE)
 setwd(file.path(mainDir, subDir))
 
-set.seed(2)
+set.seed(10)
 seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
-lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75)
+lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30)
+lambdas <- seq(0, 20, by=0.5)
 
-
+seeds[1] = 307
 # seeds[2] = 305
 # seeds[5] = 312
 # seeds[6] = 308
@@ -110,35 +117,36 @@ P0=rep(1/K,K) #Inicializamos vetor de probabilidades inciais para o HMM
 Betas=array(0, dim=c(K,D,K)) # valores de beta utilizados na geração dos valores (consideranda intercepto e duas covariáveis)
 Real=NULL
 
-Betas[2,1,1]=-1.5
-Betas[2,2,1]=-1.5
-Betas[2,3,1]=-2.6
 
-Betas[2,1,2]=-2.0
-Betas[2,2,2]=2.6
-Betas[2,3,2]=1.4
 
-Betas[2,1,3]=-2.4
-Betas[2,2,3]=2.1
-Betas[2,3,3]=-1.5
+Betas[2,1,1]=2.8
+Betas[2,3,1]=2.5
+Betas[2,8,1]=1.7
+
+Betas[2,1,2]=-1
+Betas[2,4,2]=-2
+Betas[2,7,2]=-1.6
+
+Betas[2,1,3]=1.8
+Betas[2,5,3]=3.4
+Betas[2,6,3]=2.8
 
 # Betas transição 3
-Betas[3,1,1]=-1.3
-Betas[3,2,1]=-3.2
-Betas[3,3,1]=-2.4
+Betas[3,1,1]=2.4
+Betas[3,2,1]=1.7
+Betas[3,4,1]=3.2
 
-Betas[3,1,2]=-1.3
-Betas[3,2,2]=1.7
-Betas[3,3,2]=1.3
+Betas[3,1,2]=-2
+Betas[3,6,2]=-4.2
+Betas[3,3,2]=1.6
 
-Betas[3,1,3]=-1.3
-Betas[3,2,3]=-2.7
-Betas[3,3,3]=-2.5
-
+Betas[3,1,3]=1.9
+Betas[3,5,3]=2.5
+Betas[3,3,3]=1.2
 
 # -- Caracteristicas Especificas para a distribuição das VA observaveis
 mu = c(20,150,250) # vetor com media para as duas Normais
-sigma = c(1,1.5,0.5) #Vetor com os desvios padrões para as duas normais
+sigma = c(3,1.5,1) #Vetor com os desvios padrões para as duas normais
 
 
 #Criar vetor de valores reais de Betas para comparar com o vetor de betas estimados
@@ -447,14 +455,59 @@ for (p in 1:R){
           Xtemp33<-rbind(Xtemp33, X[t,])
       }
       
+      if (is.null(Xtemp11)){
+        Xtemp11 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp11[,1] <- 1
+        print("Encontrou-se X11 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp21)){
+        Xtemp21 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp21[,1] <- 1
+        print("Encontrou-se X21 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp31)){
+        Xtemp31 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp31[,1] <- 1
+        print("Encontrou-se X31 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp12)){
+        Xtemp12 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp12[,1] <- 1
+        print("Encontrou-se X12 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp22)){
+        Xtemp22 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp22[,1] <- 1
+        print("Encontrou-se X22 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp32)){
+        Xtemp32 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp32[,1] <- 1
+        print("Encontrou-se X32 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp13)){
+        Xtemp13 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp13[,1] <- 1
+        print("Encontrou-se X13 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp23)){
+        Xtemp23 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp23[,1] <- 1
+        print("Encontrou-se X23 vazio. Gerando 1 valor aleatorio.")
+      }
+      if (is.null(Xtemp33)){
+        Xtemp33 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp33[,1] <- 1
+        print("Encontrou-se X33 vazio. Gerando 1 valor aleatorio.")
+      }
       
       ##O ajuste para estimar os parâmetros de transição é
       ##feito aqui usando a função optim e os valores das
       #covariaveis filtradas
       
-      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+      fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+      fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+      fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       
       # Aqui atribuimos os valores estimados dos parâmetros de 
       # transição a um array que sera utilizado para recalcular 
@@ -669,6 +722,43 @@ for (p in 1:R){
           Xtemp33<-rbind(Xtemp33, X[t,])
       }
       
+      if (is.null(Xtemp11)){
+        Xtemp11 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp11[,1] <- 1
+      }
+      if (is.null(Xtemp21)){
+        Xtemp21 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp21[,1] <- 1
+      }
+      if (is.null(Xtemp31)){
+        Xtemp31 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp31[,1] <- 1
+      }
+      if (is.null(Xtemp12)){
+        Xtemp12 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp12[,1] <- 1
+      }
+      if (is.null(Xtemp22)){
+        Xtemp22 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp22[,1] <- 1
+      }
+      if (is.null(Xtemp32)){
+        Xtemp32 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp32[,1] <- 1
+      }
+      if (is.null(Xtemp13)){
+        Xtemp13 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp13[,1] <- 1
+      }
+      if (is.null(Xtemp23)){
+        Xtemp23 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp23[,1] <- 1
+      }
+      if (is.null(Xtemp33)){
+        Xtemp33 <- matrix(rnorm(D), nrow = 1, ncol = D)
+        Xtemp33[,1] <- 1
+      }
+      
       fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
       fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
@@ -784,13 +874,18 @@ for (p in 1:R){
   # COLETANDO VALORES NO CONJUNTO DE VALIDAÇÃO
   
   # Valor de Lambda optimo
-  Best_Lambdas[p] <- lambdas[lasso_iterator]
+  Best_Lambdas[p] <- lambdas[min_index]
   
   # Coletar valores estimados dos parâmetros das VA observaveis
   Mu_Rep[p,] <- lasso_mu_hat_estimates[min_index,]
   Sigma_Rep[p,] <- lasso_sigma_hat_estimates[min_index,]
   Best_Beta_Estimates[p,] <- lasso_Beta_estimates[min_index,]
   Best_Beta_Arrays[,,,p] <- lasso_Beta_arrays[,,,min_index]
+  
+  print("Best Mu Estimate")
+  print(Mu_Rep[p,])
+  print("Best Sigma Estimate")
+  print(Sigma_Rep[p,])
   
   # Coletar o valor da melhor sequência S e Y no conjunto de Validação
   Best_S[p, ] <- lasso_S[min_index, ]
@@ -833,6 +928,32 @@ for (p in 1:R){
   Accuracy[p] = (sum(TN, na.rm = TRUE) + sum(TP, na.rm = TRUE)) / ( sum(TP, na.rm = TRUE) + sum(TN, na.rm = TRUE) + sum(FP, na.rm = TRUE) + sum(FN, na.rm = TRUE))
   RMSE_Parameters[p] = sum((Real - Best_Beta_Estimates[p,])^2)
   
+  ##########################################################
+  #           AVALIAÇÃO NO CONJUNTO DE TESTE
+  #--------------------------------------------------------#
+  Y_hat_test <- NULL
+  S_hat_test <- NULL
+  
+  S_hat_test[1]<-S_test[1] #O valor para o primeiro estado oculto
+  Y_hat_test[1]<-rnorm(1,mu_hat[S_hat_test[1]],sigma_hat[S_hat_test[1]])# O valor para o primeiro valor observavel
+  for (t in 2:length(Y_test)){
+    prob<-NULL
+    for (i in 1:K) prob[i]<-exp(X_test[t,]%*%matrix(Best_Beta_Arrays[i,,S_hat_test[t-1],p],ncol=1))
+    prob<-prob/sum(prob)
+    S_hat_test[t]<-which.max(prob)
+    Y_hat_test[t]<-sum(prob * mu_hat)
+  }
+  
+  MSPE_Teste[p] <- (sum((Y_hat_test - Y_test)^2))/length(Y_test)
+  Y_test_DF[p,] <- Y_test
+  Y_hat_test_NHMM_DF[p,] <- Y_hat_test
+  for (i in 1:length(S_test)) {
+    if (S_test[i] == S_hat_test[i]){
+      Acertos_S_Teste[p] =  Acertos_S_Teste[p] + 1
+    }
+  }
+  tempo_final<-Sys.time()
+  Tempo[p] <- difftime(tempo_final, tempo_inicial, units = "secs")[[1]]/60
   
   # Train dataset for other models (Concatenation of train and validation)
   X_tr <- NULL
@@ -865,34 +986,6 @@ for (p in 1:R){
   
   MSPE_Teste_arima[p] <- sum((Y_test - Y_hat_test_arima_DF[p,])^2)/length(Y_test)
   ############################################
-  
-  
-  ##########################################################
-  #           AVALIAÇÃO NO CONJUNTO DE TESTE
-  #--------------------------------------------------------#
-  Y_hat_test <- NULL
-  S_hat_test <- NULL
-  
-  S_hat_test[1]<-S_test[1] #O valor para o primeiro estado oculto
-  Y_hat_test[1]<-rnorm(1,mu_hat[S_hat_test[1]],sigma_hat[S_hat_test[1]])# O valor para o primeiro valor observavel
-  for (t in 2:length(Y_test)){
-    prob<-NULL
-    for (i in 1:K) prob[i]<-exp(X_test[t,]%*%matrix(Best_Beta_Arrays[i,,S_hat_test[t-1],p],ncol=1))
-    prob<-prob/sum(prob)
-    S_hat_test[t]<-which.max(prob)
-    Y_hat_test[t]<-sum(prob * mu_hat)
-  }
-  
-  MSPE_Teste[p] <- (sum((Y_hat_test - Y_test)^2))/length(Y_test)
-  Y_test_DF[p,] <- Y_test
-  Y_hat_test_NHMM_DF[p,] <- Y_hat_test
-  for (i in 1:length(S_test)) {
-    if (S_test[i] == S_hat_test[i]){
-      Acertos_S_Teste[p] =  Acertos_S_Teste[p] + 1
-    }
-  }
-  tempo_final<-Sys.time()
-  Tempo[p] <- difftime(tempo_final, tempo_inicial, units = "secs")[[1]]/60
 } #FIM DAS REPLICAS 
 
 
@@ -1107,9 +1200,16 @@ df3
 df4
 df5
 
+Mu_Rep
 # plot(Y_hat_test_NHMM_DF[14,],type = 'l')
 # plot(Y_hat_test_arima_DF[14,],type = 'l')
 # plot(Y_test_DF[14,], type = 'l')
 # MSPE_Teste
 # Tempo
-# Sigma_Rep
+Best_Lambdas
+Sigma_Rep
+Final_TransCount
+
+RealTransCount/length(S)
+
+Final_TransCount

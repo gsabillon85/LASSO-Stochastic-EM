@@ -1,3 +1,9 @@
+###############################################################
+#                                                             #
+#            GLOBAL INDIVUAL - 3 ESTADOS OCULTOS              #
+#                                                             #
+###############################################################
+
 library('label.switching')
 library(glmnet) # Regressão Linear Penalizada
 library(forecast) # Auto Regressive Integrated Moving Average
@@ -25,7 +31,7 @@ test_size = 0.05
 
 
 zero_threshold = 0.05
-R <- 30 # Numero de Replicas
+R <- 6 # Numero de Replicas
 T=1000 #Cumprimento da cadeia simulada
 K=3   #Numero de estados ocultos
 D=8   #Quantidade de Covariaveis
@@ -33,7 +39,7 @@ tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do
 tolval=NULL
 tolval[1]=1
 optim_algo = "BFGS" #Algorithm to use in the optimization process
-n_max_iter_EM = 25
+n_max_iter_EM = 50
 Tempo <- NULL
 
 cenario <- "TESTANDO_CODIGO"
@@ -44,8 +50,8 @@ setwd(file.path(mainDir, subDir))
 
 set.seed(2)
 seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
-lambdas <- c(0, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30)
-
+lambdas <- c(0, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30)
+#lambdas <- seq(0, 10, by=0.5)
 
 # seeds[2] = 305
 # seeds[5] = 312
@@ -110,35 +116,37 @@ P0=rep(1/K,K) #Inicializamos vetor de probabilidades inciais para o HMM
 Betas=array(0, dim=c(K,D,K)) # valores de beta utilizados na geração dos valores (consideranda intercepto e duas covariáveis)
 Real=NULL
 
-Betas[2,1,1]=-1.5
-Betas[2,2,1]=-1.5
-Betas[2,3,1]=-2.6
 
-Betas[2,1,2]=-2.0
-Betas[2,2,2]=2.6
-Betas[2,3,2]=1.4
 
-Betas[2,1,3]=-2.4
-Betas[2,2,3]=2.1
-Betas[2,3,3]=-1.5
+Betas[2,1,1]=2.8
+Betas[2,3,1]=2.5
+Betas[2,8,1]=1.7
+
+Betas[2,1,2]=-1
+Betas[2,4,2]=-2
+Betas[2,7,2]=-1.6
+
+Betas[2,1,3]=1.8
+Betas[2,5,3]=3.4
+Betas[2,6,3]=2.8
 
 # Betas transição 3
-Betas[3,1,1]=-1.3
-Betas[3,2,1]=-3.2
-Betas[3,3,1]=-2.4
+Betas[3,1,1]=2.4
+Betas[3,2,1]=1.7
+Betas[3,4,1]=3.2
 
-Betas[3,1,2]=-1.3
-Betas[3,2,2]=1.7
-Betas[3,3,2]=1.3
+Betas[3,1,2]=-2
+Betas[3,6,2]=-4.2
+Betas[3,3,2]=1.6
 
-Betas[3,1,3]=-1.3
-Betas[3,2,3]=-2.7
-Betas[3,3,3]=-2.5
+Betas[3,1,3]=1.9
+Betas[3,5,3]=2.5
+Betas[3,3,3]=1.2
 
 
 # -- Caracteristicas Especificas para a distribuição das VA observaveis
 mu = c(20,150,250) # vetor com media para as duas Normais
-sigma = c(1,1.5,0.5) #Vetor com os desvios padrões para as duas normais
+sigma = c(0.75,0.5,1) #Vetor com os desvios padrões para as duas normais
 
 
 #Criar vetor de valores reais de Betas para comparar com o vetor de betas estimados
@@ -257,7 +265,6 @@ for (p in 1:R){
     for (w in 1:length(lambdas)){
       for (b in 1:length(lambdas)){
         #setTxtProgressBar(pb, lasso_iterator)
-        
         #Estruturas necessarias no processo de estimação
         mu_hat = NULL #Variavel para estimar os mus em cada iteração do EM Estocástico
         sigma_hat = NULL #Variavel para estimar os sigmas em cada iteração do EM Estocástico
@@ -366,6 +373,8 @@ for (p in 1:R){
               A_hat_t[is.nan(A_hat_t)] = 1 
             }
             prob<-(A_hat_t[S_treino[i], ]*dnorm(Y_training[i], mu_hat, sigma_hat))/sum(A_hat_t[S_treino[i], ]*dnorm(Y_training[i], mu_hat, sigma_hat))
+            dnorm(Y_training[i], mu_hat, sigma_hat)/sum(dnorm(Y_training[i], mu_hat, sigma_hat))
+            
             #S_treino[i]=rDiscreta(prob)
             if (any(is.na(prob))){
               print("NaN encountered in S_treino update")
@@ -376,10 +385,11 @@ for (p in 1:R){
             }
           }
           
-          S_treino[is.na(S_treino)] <- 1
+          
           
           if (length(S_treino[is.na(S_treino)]) > 0){
             print(length(S_treino[is.na(S_treino)]))
+            S_treino[is.na(S_treino)] <- 1
           }
             
           
@@ -399,8 +409,8 @@ for (p in 1:R){
           for (j in 1:K) {
             for (k in 1:K) {
               if (TransCount[k,j]==0){
-                positions = sample(2:length(S_treino), 4)
-                for (d in 1:4) {
+                positions = sample(2:length(S_treino), 10)
+                for (d in 1:10) {
                   S_treino[positions[d]]=j
                   S_treino[positions[d]-1]=k
                 }
@@ -451,14 +461,88 @@ for (p in 1:R){
               Xtemp33<-rbind(Xtemp33, X[t,])
           }
           
-          
+          if (is.null(Xtemp11)){
+            Xtemp11 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp11[,1] <- 1
+            print("Encontrou-se X11 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp21)){
+            Xtemp21 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp21[,1] <- 1
+            print("Encontrou-se X21 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp31)){
+            Xtemp31 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp31[,1] <- 1
+            print("Encontrou-se X31 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp12)){
+            Xtemp12 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp12[,1] <- 1
+            print("Encontrou-se X12 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp22)){
+            Xtemp22 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp22[,1] <- 1
+            print("Encontrou-se X22 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp32)){
+            Xtemp32 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp32[,1] <- 1
+            print("Encontrou-se X32 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp13)){
+            Xtemp13 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp13[,1] <- 1
+            print("Encontrou-se X13 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp23)){
+            Xtemp23 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp23[,1] <- 1
+            print("Encontrou-se X23 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp33)){
+            Xtemp33 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp33[,1] <- 1
+            print("Encontrou-se X33 vazio. Gerando 1 valor aleatorio.")
+          }
           ##O ajuste para estimar os parâmetros de transição é
           ##feito aqui usando a função optim e os valores das
           #covariaveis filtradas
           
-          fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-          fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
-          fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+          #fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+          #fit2 <- optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+          #fit3 <- optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+          
+          fit1 <- tryCatch( 
+            {
+              optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+            },
+            error = function(e) {
+              print("Finite-NonFinite difference found when using BFGS .... Reverting to Nelder-Mead")
+              optim(par = fit1$par, fn = FSM1, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+            }
+          )
+          
+          fit2 <- tryCatch( 
+            {
+              optim(par = init2, fn = FSM2, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+            },
+            error = function(e) {
+              print("Finite-NonFinite difference found when using BFGS .... Reverting to Nelder-Mead")
+              optim(par = fit2$par, fn = FSM2, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+            }
+          )
+          
+          fit3 <- tryCatch( 
+            {
+              optim(par = init3, fn = FSM3, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
+            },
+            error = function(e) {
+              print("Finite-NonFinite difference found when using BFGS .... Reverting to Nelder-Mead")
+              optim(par = fit3$par, fn = FSM3, control = list(fnscale=-1), method = "Nelder-Mead", hessian = FALSE)
+            }
+          )
           
           # Aqui atribuimos os valores estimados dos parâmetros de 
           # transição a um array que sera utilizado para recalcular 
@@ -535,7 +619,7 @@ for (p in 1:R){
           tolval[val]<-VeroSimProxima - VeroSimActual
          # print(tolval[val])
           
-          message(paste('\r',"Lasso iteration # ",toString(lasso_iterator),"; Valor de Lambda = ",toString(lambdas[lasso_iterator]),"; Mu_hat:",toString(round(mu_hat,3)),". Sigma_hat:",toString(round(sigma_hat,3)),"                  ", collapse = ""), appendLF = FALSE) #Messagem indicando o numero da replica atual
+          message(paste('\r',"Lasso iteration # ",toString(lasso_iterator),"; Valor de Lambda = ",toString(c(lambda1,lambda2,lambda3)),"; Mu_hat:",toString(round(mu_hat,3)),". Sigma_hat:",toString(round(sigma_hat,3)),"                  ", collapse = ""), appendLF = FALSE) #Messagem indicando o numero da replica atual
         }#######Fim da primeira rodada do EM Estocastico#######
         
         #Criar algumas matrizes para fazer calculos e manipular a saida MCMC
@@ -641,6 +725,8 @@ for (p in 1:R){
           Xtemp32<-NULL
           Xtemp33<-NULL
           
+          
+          
           for (t in 2:length(S_training)) {
             #filtros indo para o Estado # 1
             if(S_treino[t]%in%1 && S_treino[t-1]%in%1)
@@ -671,6 +757,52 @@ for (p in 1:R){
             
             if(S_treino[t]%in%3 && S_treino[t-1]%in%3)
               Xtemp33<-rbind(Xtemp33, X[t,])
+          }
+          
+          if (is.null(Xtemp11)){
+            Xtemp11 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp11[,1] <- 1
+            print("Encontrou-se X11 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp21)){
+            Xtemp21 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp21[,1] <- 1
+            print("Encontrou-se X21 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp31)){
+            Xtemp31 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp31[,1] <- 1
+            print("Encontrou-se X31 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp12)){
+            Xtemp12 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp12[,1] <- 1
+            print("Encontrou-se X12 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp22)){
+            Xtemp22 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp22[,1] <- 1
+            print("Encontrou-se X22 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp32)){
+            Xtemp32 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp32[,1] <- 1
+            print("Encontrou-se X32 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp13)){
+            Xtemp13 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp13[,1] <- 1
+            print("Encontrou-se X13 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp23)){
+            Xtemp23 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp23[,1] <- 1
+            print("Encontrou-se X23 vazio. Gerando 1 valor aleatorio.")
+          }
+          if (is.null(Xtemp33)){
+            Xtemp33 <- matrix(rnorm(D), nrow = 1, ncol = D)
+            Xtemp33[,1] <- 1
+            print("Encontrou-se X33 vazio. Gerando 1 valor aleatorio.")
           }
           
           fit1 <- optim(par = init1, fn = FSM1, control = list(fnscale=-1), method = optim_algo, hessian = FALSE)
@@ -1108,7 +1240,7 @@ write.csv(data.frame(Best_Lambdas), paste("BestLambdas_T-",toString(T),"_D-",toS
 write.csv(data.frame(Acertos_S_Teste/length(S_test)), paste("Acertos_S_Test_Replicas_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 write.csv(data.frame(cbind(Specificity,Sensitivity,Accuracy)), paste("Shrinkage_Replicas_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 
-
+Mu_Rep
 
 
 df1
@@ -1117,6 +1249,7 @@ df3
 df4
 df5
 
+Tempo
 # plot(Y_hat_test_NHMM_DF[11,],type = 'l')
 # plot(Y_hat_test_arima_DF[11,],type = 'l')
 # plot(Y_test_DF[11,], type = 'l')
@@ -1124,7 +1257,7 @@ df5
 # Tempo
 # Sigma_Rep
 
-x <- seq(1:50)
+x <- seq(1:60)
 y1 <- Y_hat_test_NHMM_DF[6,]
 y2 <- Y_test_DF[6,]
 y3 <- Y_hat_test_arima_DF[6,]

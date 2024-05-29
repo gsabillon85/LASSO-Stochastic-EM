@@ -26,14 +26,14 @@ test_size = 0.05
 
 zero_threshold = 0.05
 R <- 30 # Numero de Replicas
-T=1200 #Cumprimento da cadeia simulada
+T=600 #Cumprimento da cadeia simulada
 K=2   #Numero de estados ocultos
-D=6   #Quantidade de Covariaveis
+D=10   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 optim_algo = "BFGS" #Algorithm to use in the optimization process
-n_max_iter_EM = 50
+n_max_iter_EM = 25
 Tempo <- NULL
 
 cenario <- "TESTANDO_CODIGO"
@@ -44,7 +44,7 @@ setwd(file.path(mainDir, subDir))
 
 set.seed(2)
 seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
-lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50, 75)
+lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50)
 
 
 # seeds[2] = 305
@@ -120,7 +120,7 @@ Betas[2,3,2]=1.4
 
 
 # -- Caracteristicas Especificas para a distribuição das VA observaveis
-mu = c(20,150) # vetor com media para as duas Normais
+mu = c(50,150) # vetor com media para as duas Normais
 sigma = c(1,1.5) #Vetor com os desvios padrões para as duas normais
 
 
