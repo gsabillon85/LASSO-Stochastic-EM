@@ -25,15 +25,15 @@ test_size = 0.05
 
 
 zero_threshold = 0.05
-R <- 6 # Numero de Replicas
-T=400 #Cumprimento da cadeia simulada
+R <- 30 # Numero de Replicas
+T=800 #Cumprimento da cadeia simulada
 K=2   #Numero de estados ocultos
 D=20   #Quantidade de Covariaveis
 tol<-0.0000001 #Nivel de tolerancia que estabelecemos como criterio de parada do EM Est
 tolval=NULL
 tolval[1]=1
 optim_algo = "BFGS" #Algorithm to use in the optimization process
-n_max_iter_EM = 50
+n_max_iter_EM = 25
 Tempo <- NULL
 
 cenario <- "TESTANDO_CODIGO"
@@ -45,7 +45,7 @@ setwd(file.path(mainDir, subDir))
 set.seed(2)
 seeds <-sample(110000000,R) # Seed number para conseguer os mesmos valores simulados
 #lambdas <- c(0, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 50)
-lambdas <- seq(0, 20, by=0.5)
+lambdas <- seq(2, 20, by=0.5)
 
 # seeds[2] = 305
 # seeds[5] = 312
@@ -123,8 +123,8 @@ Betas[2,3,2]=1.4
 
 
 # -- Caracteristicas Especificas para a distribuição das VA observaveis
-mu = c(20,150) # vetor com media para as duas Normais
-sigma = c(1,1.5) #Vetor com os desvios padrões para as duas normais
+mu = c(50,60) # vetor com media para as duas Normais
+sigma = c(2.5,3.5) #Vetor com os desvios padrões para as duas normais
 
 
 #Criar vetor de valores reais de Betas para comparar com o vetor de betas estimados
@@ -175,6 +175,10 @@ for (p in 1:R){
     S[t]<-rDiscreta(prob)
     Y[t]<-rnorm(1,mu[S[t]],sigma[S[t]])
   }
+  
+  # Salvamos as sequências S e Y Reais
+  S_Replicas[p,] <- S
+  Y_Replicas[p,] <- Y
   
   for (i in 2:T) {
     for (j in 1:K) {
@@ -1109,9 +1113,16 @@ df3
 df4
 df5
 
+Tempo
 # plot(Y_hat_test_NHMM_DF[14,],type = 'l')
 # plot(Y_hat_test_arima_DF[14,],type = 'l')
 # plot(Y_test_DF[14,], type = 'l')
 # MSPE_Teste
 # Tempo
 # Sigma_Rep
+mean(Mu_Rep[,1], na.rm=TRUE)
+mean(Mu_Rep[,2], na.rm=TRUE)
+Sigma_Rep
+
+mean(Sigma_Rep[,1], na.rm=TRUE)
+sigma

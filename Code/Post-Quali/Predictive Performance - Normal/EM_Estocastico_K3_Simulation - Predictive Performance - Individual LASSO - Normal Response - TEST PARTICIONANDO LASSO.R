@@ -1262,8 +1262,6 @@ write.csv(data.frame(round(Y_hat_test_NHMM_DF,2)), paste("Y_Test_hat_NHMM_T-",to
 write.csv(data.frame(S_hat_test_NHMM_DF,2), paste("S_Test_hat_NHMM_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 write.csv(data.frame(round(Y_test_DF,2)), paste("Real_Y_Test_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 
-
-
 write.csv(data.frame(Final_TransCount), paste("Real_TransitionsCount_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 write.csv(data.frame(Final_TransCount_sd), paste("Real_Transitions_SD_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 write.csv(data.frame(Best_Lambdas), paste("BestLambdas_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
@@ -1272,7 +1270,6 @@ write.csv(data.frame(Acertos_S_Teste/length(S_test)), paste("Acertos_S_Test_Repl
 write.csv(data.frame(cbind(Specificity,Sensitivity,Accuracy)), paste("Shrinkage_Replicas_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 write.csv(data.frame(S_Replicas), paste("S_Real_Replicas_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
 write.csv(data.frame(Y_Replicas), paste("Y_Real_Replicas_T-",toString(T),"_D-",toString(D),"_zerothreshold-",toString(zero_threshold),"_optimethod-",toString(optim_algo),".csv", sep = ""), row.names=FALSE)
-
 
 Mu_Rep
 Sigma_Rep
